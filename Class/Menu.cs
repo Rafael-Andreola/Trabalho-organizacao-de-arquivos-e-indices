@@ -28,7 +28,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 switch(choice)
                 {
                     case "1":
-                        fileHandler.ProcessAndSaveToBinaryFileProductData("2019-Nov.csv", "productData");
+                        fileHandler.MergeSortedBlocksToBinary(fileHandler.ProcessAndSaveSortedBlocks("2019-Nov.csv"), "userData");
                         Console.WriteLine("Dados do produto gravados no arquivo binário.");
                         break;
 
