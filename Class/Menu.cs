@@ -29,13 +29,11 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 {
                     case "1":
                         fileHandler.ProcessAndSaveToBinaryFileProductData("2019-Nov.csv", "productData");
-                        fileHandler.ProcessAndSaveToBinaryFileProductData("2019-Oct.csv", "productData", append:true);
                         Console.WriteLine("Dados do produto gravados no arquivo binário.");
                         break;
 
                     case "2":
                         fileHandler.ProcessAndSaveToBinaryFileUserData("2019-Nov.csv", "userData");
-                        fileHandler.ProcessAndSaveToBinaryFileUserData("2019-Oct.csv", "UserData", append: true);
                         Console.WriteLine("Dados do usuário gravados no arquivo binário.");
                         break;
 
