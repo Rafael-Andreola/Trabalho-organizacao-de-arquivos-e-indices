@@ -9,9 +9,13 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
     public class Menu
     {
         public FileHandler fileHandler;
+
+        private readonly string _fileName; 
         public Menu() 
         { 
             fileHandler = new FileHandler(GetBasePath());
+
+            _fileName = "2019-Nov.csv";
         }
         public void ShowMenu()
         {
@@ -28,12 +32,12 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 switch(choice)
                 {
                     case "1":
-                        fileHandler.MergeSortedBlocksToBinary(fileHandler.ProcessAndSaveSortedBlocks("2019-Nov.csv"), "userData");
+                        fileHandler.MergeSortedBlocksToBinary(fileHandler.ProcessAndSaveSortedBlocks(_fileName), "userData");
                         Console.WriteLine("Dados do produto gravados no arquivo binário.");
                         break;
 
                     case "2":
-                        fileHandler.ProcessAndSaveToBinaryFileUserData("2019-Nov.csv", "userData");
+                        fileHandler.ProcessAndSaveToBinaryFileUserData(_fileName, "userData");
                         Console.WriteLine("Dados do usuário gravados no arquivo binário.");
                         break;
 

@@ -1,6 +1,7 @@
 ﻿using CsvHelper;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -18,9 +19,15 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
 
         public List<string> ProcessAndSaveSortedBlocks(string csvFilePath)
         {
+            int bufferSize = 5000000;
             var tempFiles = new List<string>();
             var buffer = new List<ProductData>();
             int fileCount = 0;
+
+            //TODO: Teste
+            //Dictionary<int, byte> keyValuePairs = new Dictionary<int, byte>();
+
+            var stopwatch = new Stopwatch();
 
             using (var reader = new StreamReader($"{_basePath}\\{csvFilePath}"))
             using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
@@ -28,19 +35,35 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 csv.Read();  // Pula o cabeçalho
                 csv.ReadHeader();
 
+                TimeSpan timeElapsedTotal = new TimeSpan();
+
+                stopwatch.Start();
+
                 while (csv.Read())
                 {
-                    buffer.Add(new ProductData
+                    var teste = new ProductData
                     {
                         productId = csv.GetField("product_id") ?? string.Empty,
                         categoryId = csv.GetField("category_id") ?? string.Empty,
                         brand = csv.GetField("brand") ?? string.Empty
-                    });
+                    };
 
-                    if (buffer.Count >= 5000000)
+                    //TODO: Teste
+                    //if(keyValuePairs.TryAdd(int.Parse(teste.productId), 1))
+                    //{
+                    //    buffer.Add(teste);
+                    //}
+
+                    buffer.Add(teste);
+
+                    if (buffer.Count >= bufferSize)
                     {
                         // Ordena o buffer
-                        var sortedBuffer = buffer.OrderBy(p => p.productId).ToList();
+                        var sortedBuffer = buffer.DistinctBy(x => x.productId).OrderBy(p => p.productId).ToList();
+
+                        Console.WriteLine($"File {fileCount} finalizado em {stopwatch.Elapsed.Subtract(timeElapsedTotal).Seconds} s");
+
+                        timeElapsedTotal = stopwatch.Elapsed;
 
                         // Grava o bloco ordenado em um arquivo temporário
                         string tempFilePath = $"{_basePath}\\temp_{fileCount}.bin";
@@ -51,6 +74,10 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                         fileCount++;
                     }
                 }
+
+                stopwatch.Stop();
+
+                Console.WriteLine($"Processo finalizado em {stopwatch.Elapsed}");
 
                 // Grava o último bloco restante
                 if (buffer.Count > 0)
@@ -103,7 +130,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                     {
                         if (TryReadProductData(readers[i], out var product))
                         {
-                            priorityQueue.Add(product.productId, (product, i));//Estoura uma exception que já existe um registro igual na priorityQueue
+                            priorityQueue.TryAdd(product.productId, (product, i));//Estoura uma exception que já existe um registro igual na priorityQueue
                         }
                     }
 
@@ -125,7 +152,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                         // Lê o próximo produto do arquivo correspondente
                         if (TryReadProductData(readers[readerIndex], out var nextProduct))
                         {
-                            priorityQueue.Add(nextProduct.productId, (nextProduct, readerIndex));
+                            priorityQueue.TryAdd(nextProduct.productId, (nextProduct, readerIndex));
                         }
                     }
                 }
