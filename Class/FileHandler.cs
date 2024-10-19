@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,13 +20,13 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
 
         public List<string> ProcessAndSaveSortedBlocks(string csvFilePath)
         {
-            int bufferSize = 5000000;
+            int bufferSize = 25000;
             var tempFiles = new List<string>();
             var buffer = new List<ProductData>();
             int fileCount = 0;
 
-            //TODO: Teste
-            //Dictionary<int, byte> keyValuePairs = new Dictionary<int, byte>();
+            //TODO: Com o map ele funciona mas acredito que não é assim que deve ser feito
+            Dictionary<int, byte> keyValuePairs = new Dictionary<int, byte>();
 
             var stopwatch = new Stopwatch();
 
@@ -41,7 +42,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
 
                 while (csv.Read())
                 {
-                    var teste = new ProductData
+                    var product = new ProductData
                     {
                         productId = csv.GetField("product_id") ?? string.Empty,
                         categoryId = csv.GetField("category_id") ?? string.Empty,
@@ -49,12 +50,13 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                     };
 
                     //TODO: Teste
-                    //if(keyValuePairs.TryAdd(int.Parse(teste.productId), 1))
-                    //{
-                    //    buffer.Add(teste);
-                    //}
+                    if(keyValuePairs.TryAdd(int.Parse(product.productId), 1))
+                    {
+                        buffer.Add(product);
+                    }
 
-                    buffer.Add(teste);
+
+                    //buffer.Add(product);
 
                     if (buffer.Count >= bufferSize)
                     {
@@ -128,9 +130,15 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                     // Inicializa a fila com o primeiro registro de cada arquivo
                     for (int i = 0; i < readers.Count; i++)
                     {
-                        if (TryReadProductData(readers[i], out var product))
+                        while (true)
                         {
-                            priorityQueue.TryAdd(product.productId, (product, i));//Estoura uma exception que já existe um registro igual na priorityQueue
+                            if (TryReadProductData(readers[i], out var product))
+                            {
+                                if(priorityQueue.TryAdd(product.productId, (product, i)) == true)
+                                {
+                                    break;
+                                }
+                            }
                         }
                     }
 
@@ -147,14 +155,28 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                         writer.Write(productData.productId.PadRight(10).AsSpan(0, 10));
                         writer.Write(productData.categoryId.PadRight(20).AsSpan(0, 20));
                         writer.Write(productData.brand.PadRight(25).AsSpan(0, 25));
-                        writer.Write("/n");
+                        writer.Write("\n");
 
                         // Lê o próximo produto do arquivo correspondente
-                        if (TryReadProductData(readers[readerIndex], out var nextProduct))
+                        while (true)
                         {
-                            priorityQueue.TryAdd(nextProduct.productId, (nextProduct, readerIndex));
+                            if(TryReadProductData(readers[readerIndex], out var nextProduct))
+                            {
+                                if (nextProduct.productId == "")
+                                {
+                                    priorityQueue.Remove(first.Key);
+                                    break;
+                                }
+
+                                if(priorityQueue.TryAdd(nextProduct.productId, (nextProduct, readerIndex)) == true)
+                                {
+                                    break;
+                                }
+                            }
                         }
                     }
+
+                    Console.WriteLine("Acabou");
                 }
             }
             finally
@@ -228,8 +250,6 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
 
         public void ProcessAndSaveToBinaryFileUserData(string csvFilePath, string binaryFilePath, bool append = false)
         {
-
-
             using (var fileStream = new FileStream($"{_basePath}\\{binaryFilePath}", append ? FileMode.Append : FileMode.Create))
             using (var writer = new BinaryWriter(fileStream))
             using (var reader = new StreamReader($"{_basePath}\\{csvFilePath}"))
@@ -298,6 +318,36 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
             var sortedData = productDataList.OrderBy(p => p.productId).ToList();
 
             SaveSortedProductData(binaryFilePath, sortedData);
+        }
+
+        //TODO: Fazer certo
+        public void showProductDataBinaryFile(string binaryFilePath)
+        {
+            using FileStream file = new FileStream($"{_basePath}\\{binaryFilePath}", FileMode.Open);
+
+            using var reader = new BinaryReader(file);
+
+            reader.BaseStream.Position = 0;
+
+            while (reader.BaseStream.Position < reader.BaseStream.Length) 
+            {
+                Console.WriteLine(reader.ReadChars(55));
+
+                reader.BaseStream.Seek(reader.BaseStream.Position + 55, SeekOrigin.Begin);
+            }
+        }
+
+        public List<string> GetBinaryReaders()
+        {
+            //TODO: fazer certo
+            List<string> tempFiles = new List<string>();
+
+            for (int i = 0; i < 14; i++)
+            {
+                tempFiles.Add($"{_basePath}\\temp_{i}.bin");
+            }
+
+            return tempFiles;
         }
     }
 }
