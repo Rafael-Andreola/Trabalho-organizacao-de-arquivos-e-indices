@@ -102,7 +102,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
             {
                 foreach (var row in buffer)
                 {
-                    //writer.Write(nextIndex++.ToString().PadRight(15).AsSpan(0, 15));
+                    writer.Write(nextIndex++.ToString().PadRight(15).AsSpan(0, 15));
                     writer.Write(row.productId.PadRight(10).AsSpan(0, 10));
                     writer.Write(row.categoryId.PadRight(20).AsSpan(0, 20));
                     writer.Write(row.brand.PadRight(25).AsSpan(0, 25));
@@ -134,7 +134,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 using var writerProduct = new BinaryWriter(outputFileProduct);
                 using var writerUser = new BinaryWriter(outputFileUser);
 
-                var priorityQueue = new SortedList<string, (Row row, int readerIndex)>();
+                var priorityQueue = new SortedDictionary<long, (Row row, int readerIndex)>();
 
                 var stopwatch = new Stopwatch();
                 stopwatch.Start();
@@ -144,7 +144,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 {
                     if(TryReadRowData(readers[i], out var row))
                     {
-                        priorityQueue.Add(row.productId, (row, i));
+                        priorityQueue.Add(row.Id, (row, i));
                     }
                 }
 
@@ -186,7 +186,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                         }
 
                         
-                        priorityQueue.Add(row.productId, (row, readerIndex));
+                        priorityQueue.Add(row.Id, (row, readerIndex));
                     }
                 }
 
@@ -210,7 +210,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
             {
                 // Lê os dados do arquivo em tamanhos fixos
 
-                //string id = new string(reader.ReadChars(15)).Trim();
+                string id = new string(reader.ReadChars(15)).Trim();
                 string productId = new string(reader.ReadChars(10)).Trim();
                 string categoryId = new string(reader.ReadChars(20)).Trim();
                 string brand = new string(reader.ReadChars(25)).Trim();
@@ -223,7 +223,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 // Cria um novo objeto ProductData com os dados lidos
                 row = new Row
                 {
-                    //Id = long.Parse(id),
+                    Id = long.Parse(id),
                     productId = productId,
                     categoryId = categoryId,
                     brand = brand,
