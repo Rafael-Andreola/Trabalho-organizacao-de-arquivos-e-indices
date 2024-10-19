@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Trabalho1_OrganizaçõesDeArquivosE_Indices")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+58fb861e11eb6827570fd4d5aadc8930d706bb1c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+574504de7cc48b0c2e6efc19bf52c9bb7e90b29a")]
 [assembly: System.Reflection.AssemblyProductAttribute("Trabalho1_OrganizaçõesDeArquivosE_Indices")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Trabalho1_OrganizaçõesDeArquivosE_Indices")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

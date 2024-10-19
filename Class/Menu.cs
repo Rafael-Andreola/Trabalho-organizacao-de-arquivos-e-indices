@@ -15,7 +15,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
         { 
             fileHandler = new FileHandler(GetBasePath());
 
-            _fileName = "2019-Nov.csv";
+            _fileName = "2019-Oct.csv";
         }
         public void ShowMenu()
         {
@@ -34,7 +34,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 switch(choice)
                 {
                     case "1":
-                        fileHandler.MergeSortedBlocksToBinary(fileHandler.ProcessAndSaveSortedBlocks(_fileName), "productData");
+                        fileHandler.CreateData(fileHandler.ProcessAndSaveSortedBlocks(_fileName));
                         Console.WriteLine("Dados do produto gravados no arquivo binário.");
                         break;
 
@@ -48,11 +48,11 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                         break;
 
                     case "4":
-                        fileHandler.showProductDataBinaryFile("productData");
+                        fileHandler.showProductDataBinaryFile("Product");
                         break;
 
                     case "5":
-                        fileHandler.MergeSortedBlocksToBinary(fileHandler.GetBinaryReaders(), "productData");
+                        fileHandler.CreateData(fileHandler.GetBinaryReaders(9));
                         break;
 
                     case "0":
