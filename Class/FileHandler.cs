@@ -38,8 +38,6 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
 
                 stopwatch.Start();
 
-                long nextIndex = 0;
-
                 while (csv.Read())
                 {
                     var row = new Row
@@ -56,17 +54,14 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
 
                     if (buffer.Count >= bufferSize)
                     {
-                        // Ordena o buffer
-                        var sortedBuffer = buffer.OrderBy(p => p.productId).ToList();
-
                         // Grava o bloco ordenado em um arquivo temporário
-                        string tempFilePath = $"{_basePath}\\temp_{fileCount}.bin";
+                        string tmpFile = $"{_basePath}\\temp_{fileCount}.bin";
+                        tempFiles.Add(tmpFile);
 
-                        tempFiles.Add(tempFilePath);
+                        // Ordena o buffer
+                        WriteBufferToBinaryFile([.. buffer.OrderBy(p => p.productId)], tmpFile);
 
-                        nextIndex = WriteBufferToBinaryFile(sortedBuffer, tempFilePath, nextIndex);
-
-                        Console.WriteLine($"File {fileCount} finalizado em {stopwatch.Elapsed.Subtract(timeElapsedTotal).Seconds} s");
+                        Console.WriteLine($"File {fileCount} finalizado em {stopwatch.Elapsed.Subtract(timeElapsedTotal).Seconds}s");
 
                         timeElapsedTotal = stopwatch.Elapsed;
 
@@ -78,13 +73,12 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 // Grava o último bloco restante
                 if (buffer.Count > 0)
                 {
-                    var sortedBuffer = buffer.OrderBy(p => p.productId).ToList();
+                    string tmpFile = $"{_basePath}\\temp_{fileCount}.bin";
+                    tempFiles.Add(tmpFile);
+                    WriteBufferToBinaryFile([.. buffer.OrderBy(p => p.productId)], tmpFile);
 
-                    string tempFilePath = $"{_basePath}\\temp_{fileCount}.bin";
-                    tempFiles.Add(tempFilePath);
-                    WriteBufferToBinaryFile(sortedBuffer, tempFilePath, nextIndex);
 
-                    Console.WriteLine($"File {fileCount} finalizado em {stopwatch.Elapsed.Subtract(timeElapsedTotal).Seconds} s");
+                    Console.WriteLine($"File {fileCount} finalizado em {stopwatch.Elapsed.Subtract(timeElapsedTotal).Seconds}s");
                 }
 
                 stopwatch.Stop();
@@ -95,24 +89,23 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
             return tempFiles;
         }
 
-        private long WriteBufferToBinaryFile(List<Row> buffer, string filePath, long nextIndex)
+        private void WriteBufferToBinaryFile(List<Row> productBuffer, string filePath)
         {
             using (var fileStream = new FileStream(filePath, FileMode.Create))
             using (var writer = new BinaryWriter(fileStream))
             {
-                foreach (var row in buffer)
+                foreach (var item in productBuffer)
                 {
-                    writer.Write(nextIndex++.ToString().PadRight(15).AsSpan(0, 15));
-                    writer.Write(row.productId.PadRight(10).AsSpan(0, 10));
-                    writer.Write(row.categoryId.PadRight(20).AsSpan(0, 20));
-                    writer.Write(row.brand.PadRight(25).AsSpan(0, 25));
-                    writer.Write(row.userId.PadRight(15).AsSpan(0, 15));
-                    writer.Write(row.userSession.PadRight(35).AsSpan(0, 35));
-                    writer.Write(row.eventType.PadRight(10).AsSpan(0, 10));
+                    writer.Write(item.productId.PadRight(10).AsSpan(0, 10));
+                    writer.Write(item.categoryId.PadRight(20).AsSpan(0, 20));
+                    writer.Write(item.brand.PadRight(25).AsSpan(0, 25));
                 }
-            }
 
-            return nextIndex;
+                //writer.Write(user.userId.PadRight(15).AsSpan(0, 15));
+                //writer.Write(user.userSession.PadRight(35).AsSpan(0, 35));
+                //writer.Write(user.eventType.PadRight(10).AsSpan(0, 10));
+
+            }
         }
 
         public void CreateData(List<string> tempFiles)
@@ -129,12 +122,10 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 }
 
                 using var outputFileProduct = new FileStream($"{_basePath}\\Product.bin", FileMode.Create);
-                using var outputFileUser = new FileStream($"{_basePath}\\User.bin", FileMode.Create);
 
                 using var writerProduct = new BinaryWriter(outputFileProduct);
-                using var writerUser = new BinaryWriter(outputFileUser);
 
-                var priorityQueue = new SortedDictionary<long, (Row row, int readerIndex)>();
+                var priorityQueueProduct = new List<MergeProduct>();
 
                 var stopwatch = new Stopwatch();
                 stopwatch.Start();
@@ -144,7 +135,12 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 {
                     if(TryReadRowData(readers[i], out var row))
                     {
-                        priorityQueue.Add(row.Id, (row, i));
+                        priorityQueueProduct.Add( new MergeProduct
+                        {
+                            row = row,
+                            productIdReference = long.Parse(row.productId),
+                            indexReader = i
+                        });
                     }
                 }
 
@@ -153,40 +149,48 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 int j = 0;
 
                 // Executa o merge
-                while (priorityQueue.Count > 0)
+                while (priorityQueueProduct.Count > 0)
                 {
                     // Remove o menor elemento da fila
-                    var first = priorityQueue.First();
-                    var rowData = first.Value.row;
-                    var readerIndex = first.Value.readerIndex;
+                    MergeProduct firstProduct = null;
+                    //MergeUser firstUser = null;
+
+                    foreach (var item in priorityQueueProduct)
+                    {
+                        if(firstProduct == null || firstProduct.productIdReference >= item.productIdReference)
+                        {
+                            firstProduct = item;
+                        }
+                    }
+
+                    var rowDataProduct = firstProduct.row;
+                    var readerIndex = firstProduct.indexReader;
 
                     // Grava o produto no arquivo final
-                    writerProduct.Write((j).ToString().PadRight(15).AsSpan(0, 15));
-                    writerProduct.Write(rowData.productId.PadRight(10).AsSpan(0, 10));
-                    writerProduct.Write(rowData.categoryId.PadRight(20).AsSpan(0, 20));
-                    writerProduct.Write(rowData.brand.PadRight(25).AsSpan(0, 25));
+                    writerProduct.Write((j++).ToString().PadRight(15).AsSpan(0, 15));
+                    writerProduct.Write(rowDataProduct.productId.PadRight(10).AsSpan(0, 10));
+                    writerProduct.Write(rowDataProduct.categoryId.PadRight(20).AsSpan(0, 20));
+                    writerProduct.Write(rowDataProduct.brand.PadRight(25).AsSpan(0, 25));
                     writerProduct.Write("\n");
-                    // Grava o user no arquivo final
-                    writerUser.Write((j).ToString().PadRight(15).AsSpan(0,10));
-                    writerUser.Write(rowData.userId.PadRight(15).AsSpan(0, 15));
-                    writerUser.Write(rowData.userSession.PadRight(35).AsSpan(0, 35));
-                    writerUser.Write(rowData.eventType.PadRight(10).AsSpan(0, 10));
-                    writerUser.Write("\n");
 
+                    priorityQueueProduct.Remove(firstProduct);
 
-                    j++;
-                    priorityQueue.Remove(first.Key);
-                    
                     // Lê o próximo produto do arquivo correspondente
                     if (TryReadRowData(readers[readerIndex], out var row))
                     {
-                        if(row == null)
+                        if(row == null || row.productId == "")
                         {
                             continue;
                         }
 
-                        
-                        priorityQueue.Add(row.Id, (row, readerIndex));
+                        priorityQueueProduct.Add(new MergeProduct
+                        {
+
+                            row = row,
+                            productIdReference = long.Parse(row.productId),
+                            indexReader = readerIndex
+                        });
+
                     }
                 }
 
@@ -210,26 +214,24 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
             {
                 // Lê os dados do arquivo em tamanhos fixos
 
-                string id = new string(reader.ReadChars(15)).Trim();
+                //string id = new string(reader.ReadChars(15)).Trim();
                 string productId = new string(reader.ReadChars(10)).Trim();
                 string categoryId = new string(reader.ReadChars(20)).Trim();
                 string brand = new string(reader.ReadChars(25)).Trim();
-                string userId = new string(reader.ReadChars(15)).Trim();
-                string userSession = new string(reader.ReadChars(35)).Trim();
-                string eventType = new string(reader.ReadChars(10)).Trim();
+                //string userId = new string(reader.ReadChars(15)).Trim();
+                //string userSession = new string(reader.ReadChars(35)).Trim();
+                //string eventType = new string(reader.ReadChars(10)).Trim();
                 
-
-
                 // Cria um novo objeto ProductData com os dados lidos
                 row = new Row
                 {
-                    Id = long.Parse(id),
+                    //Id = long.Parse(id),
                     productId = productId,
                     categoryId = categoryId,
                     brand = brand,
-                    userId = userId,
-                    userSession = userSession,
-                    eventType = eventType
+                    //userId = userId,
+                    //userSession = userSession,
+                    //eventType = eventType
                 };
 
                 return true; // Leitura bem-sucedida
@@ -245,122 +247,6 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 Console.WriteLine($"Erro ao ler os dados: {ex.Message}");
                 row = null;
                 return false;
-            }
-        }
-
-        private bool TryReadUserData(BinaryReader reader, out UserData user)
-        {
-            try
-            {
-                // Lê os dados do arquivo em tamanhos fixos
-                string userId = new string(reader.ReadChars(15)).Trim();
-                string userSession = new string(reader.ReadChars(30)).Trim();
-                string eventType = new string(reader.ReadChars(10)).Trim();
-
-                // Cria um novo objeto ProductData com os dados lidos
-                user = new UserData
-                {
-                    userId = userId,
-                    userSession = userSession,
-                    eventType = eventType
-                };
-
-                return true; // Leitura bem-sucedida
-            }
-            catch (EndOfStreamException)
-            {
-                user = null; // Final do arquivo alcançado
-                return false;
-            }
-            catch (Exception ex)
-            {
-                // Tratamento para outros erros potenciais
-                Console.WriteLine($"Erro ao ler os dados: {ex.Message}");
-                user = null;
-                return false;
-            }
-        }
-
-        private bool TryReadProductData(BinaryReader reader, out ProductData product)
-        {
-            try
-            {
-                // Lê os dados do arquivo em tamanhos fixos
-                string productId = new string(reader.ReadChars(10)).Trim();
-                string categoryId = new string(reader.ReadChars(20)).Trim();
-                string brand = new string(reader.ReadChars(25)).Trim();
-
-                // Cria um novo objeto ProductData com os dados lidos
-                product = new ProductData
-                {
-                    productId = productId,
-                    categoryId = categoryId,
-                    brand = brand
-                };
-
-                return true; // Leitura bem-sucedida
-            }
-            catch (EndOfStreamException)
-            {
-                product = null; // Final do arquivo alcançado
-                return false;
-            }
-            catch (Exception ex)
-            {
-                // Tratamento para outros erros potenciais
-                Console.WriteLine($"Erro ao ler os dados: {ex.Message}");
-                product = null;
-                return false;
-            }
-        }
-
-/////////////////////////////////////////// Criação sem ordenar
-
-        public void ProcessAndSaveToBinaryFileProductData(string csvFilePath, string binaryFilePath, bool append = false)
-        {
-            using (var fileStream = new FileStream($"{_basePath}\\{binaryFilePath}", append ? FileMode.Append : FileMode.Create))
-            using (var writer = new BinaryWriter(fileStream))
-            using (var reader = new StreamReader($"{_basePath}\\{csvFilePath}"))
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-            {
-                csv.Read();
-                csv.ReadHeader();
-
-                while (csv.Read())
-                {
-                    var productId = csv.GetField("product_id") ?? string.Empty;
-                    var categoryId = csv.GetField("category_id") ?? string.Empty;
-                    var brand = csv.GetField("brand") ?? string.Empty;
-
-                    writer.Write(productId.PadRight(10).AsSpan(0, 10));
-                    writer.Write(categoryId.PadRight(20).AsSpan(0, 20));
-                    writer.Write(brand.PadRight(25).AsSpan(0, 25));
-                    writer.Write("/n");
-                }
-            }
-        }
-
-        public void ProcessAndSaveToBinaryFileUserData(string csvFilePath, string binaryFilePath, bool append = false)
-        {
-            using (var fileStream = new FileStream($"{_basePath}\\{binaryFilePath}", append ? FileMode.Append : FileMode.Create))
-            using (var writer = new BinaryWriter(fileStream))
-            using (var reader = new StreamReader($"{_basePath}\\{csvFilePath}"))
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-            {
-                csv.Read();
-                csv.ReadHeader();
-
-                while (csv.Read())
-                {
-                    var userId = csv.GetField("user_id") ?? string.Empty;
-                    var sessionId = csv.GetField("user_session") ?? string.Empty;
-                    var eventType = csv.GetField("event_type") ?? string.Empty;
-
-                    writer.Write(userId.PadRight(10).AsSpan(0, 10));
-                    writer.Write(sessionId.PadRight(10).AsSpan(0, 10));
-                    writer.Write(eventType.PadRight(20).AsSpan(0, 20));
-                    writer.Write("/n");
-                }
             }
         }
 
@@ -452,6 +338,11 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
             }
 
             return tempFiles;
+        }
+
+        public void CreateIndexes()
+        {
+            throw new NotImplementedException();
         }
     }
 }
