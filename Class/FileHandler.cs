@@ -196,8 +196,8 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                     writerProduct.Write(rowDataProduct.productId.PadRight(10).AsSpan(0, 10));
                     writerProduct.Write(rowDataProduct.categoryId.PadRight(20).AsSpan(0, 20));
                     writerProduct.Write(rowDataProduct.brand.PadRight(25).AsSpan(0, 25));
-                    writerProduct.Write(0);
-                    writerProduct.Write("\n");
+                    writerProduct.Write(0.ToString().PadRight(5).AsSpan(0, 5));
+                    writerProduct.Write("\n".ToString().PadLeft(5).AsSpan(0, 5));
 
                     priorityQueueProduct.Remove(firstProduct);
 
@@ -305,17 +305,15 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                     var rowDataUser = firstUser.row;
                     var readerIndex = firstUser.indexReader;
 
-                    // Grava o produto no arquivo final
                     writerUser.Write((j++).ToString().PadRight(15).AsSpan(0, 15));
                     writerUser.Write(rowDataUser.userId.PadRight(10).AsSpan(0, 10));
                     writerUser.Write(rowDataUser.userSession.PadRight(35).AsSpan(0, 35));
                     writerUser.Write(rowDataUser.eventType.PadRight(10).AsSpan(0, 10));
-                    writerUser.Write(0);
-                    writerUser.Write("\n");
+                    writerUser.Write(0.ToString().PadRight(5).AsSpan(0, 5));
+                    writerUser.Write("\n".ToString().PadLeft(5).AsSpan(0, 5));
 
                     priorityQueueUser.Remove(firstUser);
 
-                    // Lê o próximo produto do arquivo correspondente
                     if (TryReadRowForUserData(readers[readerIndex], out var row))
                     {
                         if (row == null || row.userId == "")
@@ -543,7 +541,8 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                     autoIncremt = new string(reader.ReadChars(15)).Trim();
                     currentId = new string(reader.ReadChars(10)).Trim();
 
-                    reader.BaseStream.Seek(48, SeekOrigin.Current); // Pula os outros campos
+                    //reader.ReadString();
+                    reader.BaseStream.Seek(55, SeekOrigin.Current); // Pula os outros campos
 
                     if (currentId != previousId)
                     {
