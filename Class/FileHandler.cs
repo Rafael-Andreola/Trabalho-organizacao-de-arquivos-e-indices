@@ -19,7 +19,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
             _basePath = basePath;
         }
 
-        public List<string> ProcessAndSaveSortedBlocks(string csvFilePath)
+        public List<string> ProcessAndSaveSortedBlocks(string csvFilePath, string orderCriterium)
         {
             int bufferSize = 5000000;
             var tempFiles = new List<string>();
@@ -56,10 +56,18 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                     {
                         // Grava o bloco ordenado em um arquivo temporário
                         string tmpFile = $"{_basePath}\\temp_{fileCount}.bin";
+
                         tempFiles.Add(tmpFile);
 
                         // Ordena o buffer
-                        WriteBufferToBinaryFile([.. buffer.OrderBy(p => p.productId)], tmpFile);
+                        if(orderCriterium == "product")
+                        {
+                            WriteProductBufferToBinaryFile([.. buffer.OrderBy(p => long.Parse(p.productId))], tmpFile);
+                        }
+                        else if (orderCriterium == "user")
+                        {
+                            WriteUserBufferToBinaryFile([.. buffer.OrderBy(u => long.Parse(u.userId))], tmpFile);
+                        }
 
                         Console.WriteLine($"File {fileCount} finalizado em {stopwatch.Elapsed.Subtract(timeElapsedTotal).Seconds}s");
 
@@ -75,7 +83,15 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 {
                     string tmpFile = $"{_basePath}\\temp_{fileCount}.bin";
                     tempFiles.Add(tmpFile);
-                    WriteBufferToBinaryFile([.. buffer.OrderBy(p => p.productId)], tmpFile);
+
+                    if(orderCriterium == "product")
+                    {
+                        WriteProductBufferToBinaryFile([.. buffer.OrderBy(p => long.Parse(p.productId))], tmpFile);
+                    }
+                        else if (orderCriterium == "user")
+                    {
+                        WriteUserBufferToBinaryFile([.. buffer.OrderBy(u => long.Parse(u.userId))], tmpFile);
+                    }
 
 
                     Console.WriteLine($"File {fileCount} finalizado em {stopwatch.Elapsed.Subtract(timeElapsedTotal).Seconds}s");
@@ -89,7 +105,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
             return tempFiles;
         }
 
-        private void WriteBufferToBinaryFile(List<Row> productBuffer, string filePath)
+        private void WriteProductBufferToBinaryFile(List<Row> productBuffer, string filePath)
         {
             using (var fileStream = new FileStream(filePath, FileMode.Create))
             using (var writer = new BinaryWriter(fileStream))
@@ -100,15 +116,24 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                     writer.Write(item.categoryId.PadRight(20).AsSpan(0, 20));
                     writer.Write(item.brand.PadRight(25).AsSpan(0, 25));
                 }
-
-                //writer.Write(user.userId.PadRight(15).AsSpan(0, 15));
-                //writer.Write(user.userSession.PadRight(35).AsSpan(0, 35));
-                //writer.Write(user.eventType.PadRight(10).AsSpan(0, 10));
-
             }
         }
 
-        public void CreateData(List<string> tempFiles)
+        private void WriteUserBufferToBinaryFile(List<Row> userBuffer, string filePath)
+        {
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            using (var writer = new BinaryWriter(fileStream))
+            {
+                foreach (var item in userBuffer)
+                {
+                    writer.Write(item.userId.PadRight(15).AsSpan(0, 15));
+                    writer.Write(item.userSession.PadRight(35).AsSpan(0, 35));
+                    writer.Write(item.eventType.PadRight(10).AsSpan(0, 10));
+                }
+            }
+        }
+
+        public void CreateProductData(List<string> tempFiles)
         {
             var readers = new List<BinaryReader>();
 
@@ -133,7 +158,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 // Inicializa a fila com o primeiro registro de cada arquivo
                 for (int i = 0; i < readers.Count; i++)
                 {
-                    if(TryReadRowData(readers[i], out var row))
+                    if(TryReadRowForProductData(readers[i], out var row))
                     {
                         priorityQueueProduct.Add( new MergeProduct
                         {
@@ -176,7 +201,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                     priorityQueueProduct.Remove(firstProduct);
 
                     // Lê o próximo produto do arquivo correspondente
-                    if (TryReadRowData(readers[readerIndex], out var row))
+                    if (TryReadRowForProductData(readers[readerIndex], out var row))
                     {
                         if(row == null || row.productId == "")
                         {
@@ -204,17 +229,142 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 foreach (var reader in readers)
                 {
                     reader.Close();
+                    
+                }
+
+                foreach (var tempFile in tempFiles)
+                {
+                    try
+                    {
+                        File.Delete(tempFile);
+                        Console.WriteLine($"Arquivo {tempFile} excluído com sucesso.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Erro ao excluir o arquivo {tempFile}: {ex.Message}");
+                    }
                 }
             }
         }
 
-        private bool TryReadRowData(BinaryReader reader, out Row row)
+        public void CreateUserData(List<string> tempFiles)
+        {
+            var readers = new List<BinaryReader>();
+
+            try
+            {
+                // Abrir todos os arquivos temporários para leitura
+                foreach (var tempFile in tempFiles)
+                {
+                    var fileStream = new FileStream(tempFile, FileMode.Open);
+                    readers.Add(new BinaryReader(fileStream));
+                }
+
+                using var outputFileUser = new FileStream($"{_basePath}\\User.bin", FileMode.Create);
+
+                using var writerUser = new BinaryWriter(outputFileUser);
+
+                var priorityQueueUser = new List<MergeUser>();
+
+                var stopwatch = new Stopwatch();
+                stopwatch.Start();
+
+                // Inicializa a fila com o primeiro registro de cada arquivo
+                for (int i = 0; i < readers.Count; i++)
+                {
+                    if (TryReadRowForUserData(readers[i], out var row))
+                    {
+                        priorityQueueUser.Add(new MergeUser
+                        {
+                            row = row,
+                            userIdReference = long.Parse(row.userId),
+                            indexReader = i
+                        });
+                    }
+                }
+
+                Console.WriteLine("Iniciando Merge.");
+
+                int j = 0;
+
+                // Executa o merge
+                while (priorityQueueUser.Count > 0)
+                {
+                    // Remove o menor elemento da fila
+                    MergeUser firstUser = null;
+
+                    foreach (var item in priorityQueueUser)
+                    {
+                        if (firstUser == null || firstUser.userIdReference >= item.userIdReference)
+                        {
+                            firstUser = item;
+                        }
+                    }
+
+                    var rowDataUser = firstUser.row;
+                    var readerIndex = firstUser.indexReader;
+
+                    // Grava o produto no arquivo final
+                    writerUser.Write((j++).ToString().PadRight(15).AsSpan(0, 15));
+                    writerUser.Write(rowDataUser.userId.PadRight(10).AsSpan(0, 10));
+                    writerUser.Write(rowDataUser.userSession.PadRight(35).AsSpan(0, 35));
+                    writerUser.Write(rowDataUser.eventType.PadRight(10).AsSpan(0, 10));
+                    writerUser.Write("\n");
+
+                    priorityQueueUser.Remove(firstUser);
+
+                    // Lê o próximo produto do arquivo correspondente
+                    if (TryReadRowForUserData(readers[readerIndex], out var row))
+                    {
+                        if (row == null || row.userId == "")
+                        {
+                            continue;
+                        }
+
+                        priorityQueueUser.Add(new MergeUser
+                        {
+                            row = row,
+                            userIdReference = long.Parse(row.userId),
+                            indexReader = readerIndex
+                        });
+
+                    }
+                }
+
+                stopwatch.Stop();
+
+                Console.WriteLine(stopwatch.Elapsed);
+            }
+            finally
+            {
+                // Fechar todos os leitores
+                foreach (var reader in readers)
+                {
+                    reader.Close();
+
+                }
+
+                foreach (var tempFile in tempFiles)
+                {
+                    try
+                    {
+                        File.Delete(tempFile);
+                        Console.WriteLine($"Arquivo {tempFile} excluído com sucesso.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Erro ao excluir o arquivo {tempFile}: {ex.Message}");
+                    }
+                }
+            }
+        }
+
+        private bool TryReadRowForProductData(BinaryReader reader, out Row row)
         {
             try
             {
                 // Lê os dados do arquivo em tamanhos fixos
 
-                //string id = new string(reader.ReadChars(15)).Trim();
                 string productId = new string(reader.ReadChars(10)).Trim();
                 string categoryId = new string(reader.ReadChars(20)).Trim();
                 string brand = new string(reader.ReadChars(25)).Trim();
@@ -232,6 +382,39 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                     //userId = userId,
                     //userSession = userSession,
                     //eventType = eventType
+                };
+
+                return true; // Leitura bem-sucedida
+            }
+            catch (EndOfStreamException)
+            {
+                row = null; // Final do arquivo alcançado
+                return false;
+            }
+            catch (Exception ex)
+            {
+                // Tratamento para outros erros potenciais
+                Console.WriteLine($"Erro ao ler os dados: {ex.Message}");
+                row = null;
+                return false;
+            }
+        }
+
+        private bool TryReadRowForUserData(BinaryReader reader, out Row row)
+        {
+            try
+            {
+                // Lê os dados do arquivo em tamanhos fixos
+                string userId = new string(reader.ReadChars(15)).Trim();
+                string userSession = new string(reader.ReadChars(35)).Trim();
+                string eventType = new string(reader.ReadChars(10)).Trim();
+
+                // Cria um novo objeto ProductData com os dados lidos
+                row = new Row
+                {
+                    userId = userId,
+                    userSession = userSession,
+                    eventType = eventType
                 };
 
                 return true; // Leitura bem-sucedida
