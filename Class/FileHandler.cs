@@ -608,10 +608,10 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
 
         public void UserWithMoreInteraction(string indexFileName)
         {
-            string? previousProductId = null;
+            string? previousUserId = null;
             long? previousPosition = null;
 
-            string? maxProductId = null;
+            string? userWithMoreInteraction = null;
             long maxRecordCount = 0;
 
             using var indexFileStream = new FileStream($"{_basePath}\\{indexFileName}", FileMode.Open);
@@ -620,32 +620,31 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
             string? line;
             while ((line = indexReader.ReadLine()) != null)
             {
-                string productId = line.Substring(0, 10).Trim();
+                string userId = line.Substring(0, 10).Trim();
                 long currentPosition = long.Parse(line.Substring(10, 15).Trim());
 
-                if (previousProductId != null)
+                if (previousUserId != null)
                 {
                     long recordCount = currentPosition - previousPosition.GetValueOrDefault();
 
                     if (recordCount > maxRecordCount)
                     {
                         maxRecordCount = recordCount;
-                        maxProductId = previousProductId;
+                        userWithMoreInteraction = previousUserId;
                     }
                 }
-                previousProductId = productId;
+                previousUserId = userId;
                 previousPosition = currentPosition;
             }
 
-            if (maxProductId != null)
+            if (userWithMoreInteraction != null)
             {
-                Console.WriteLine($"O produto com mais registros é '{maxProductId}' com {maxRecordCount} registros.");
+                Console.WriteLine($"O Usuário com mais interações é '{userWithMoreInteraction}' com {maxRecordCount} registros.");
             }
             else
             {
-                Console.WriteLine("Nenhum produto encontrado no arquivo de índice.");
+                Console.WriteLine("Nenhum usuário encontrado no arquivo de índice.");
             }
         }
-
     }
 }
