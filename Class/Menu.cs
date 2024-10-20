@@ -65,11 +65,18 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                         break;
 
                     case "7":
-                        fileHandler.FindProductId( GetId() ,"IndexProductId.bin");
+                        fileHandler.FindProductId( GetId("Digite o ID do produto que deseja procurar:") ,"IndexProductId.bin");
                         break;
 
                     case "8":
-                        fileHandler.FindUserId(GetId(), "IndexUserId.bin");
+                        fileHandler.FindUserId(GetId("Digite o ID do usuario que deseja procurar:"), "IndexUserId.bin");
+                        break;
+                    case "9":
+                        fileHandler.DeleteByProductId("Product.bin", GetId("Digite o ID que deseja deletar:"), 80);
+                        break;
+
+                    case "10":
+                        fileHandler.DeleteByUserId("User.bin", GetId("Digite o ID que deseja deletar:"), 80);
                         break;
 
                     case "0":
@@ -84,9 +91,9 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
             return Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName + "\\Data";
         }
 
-        private string GetId()
+        private string GetId(string message)
         {
-            Console.WriteLine("Digite o ID que deseja procurar:");
+            Console.WriteLine(message);
             return Console.ReadLine();
         }
     }

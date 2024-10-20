@@ -21,7 +21,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
 
         public List<string> ProcessAndSaveSortedBlocks(string csvFilePath, string orderCriterium)
         {
-            int bufferSize = 5000000;
+            int bufferSize = 2500000;
             var tempFiles = new List<string>();
             var buffer = new List<Row>();
             int fileCount = 0;
@@ -530,19 +530,21 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
 
             stopwatch.Start();
 
-            TimeSpan timeElapsedTotal = new TimeSpan();
-
             try
             {
+                long i = 0;
+
                 while (fileStream.Position < fileStream.Length)
                 {
+                    reader.BaseStream.Position = (80 * i++); // Pula os outros campos
+
                     string currentId;
 
                     autoIncremt = new string(reader.ReadChars(15)).Trim();
                     currentId = new string(reader.ReadChars(10)).Trim();
 
                     //reader.ReadString();
-                    reader.BaseStream.Seek(55, SeekOrigin.Current); // Pula os outros campos
+                    //reader.BaseStream.Seek(55, SeekOrigin.Current); // Pula os outros campos
 
                     if (currentId != previousId)
                     {
@@ -555,9 +557,9 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                     }
                 }
 
-                Console.WriteLine($"Arquivo de índice criado com sucesso, finalizado em {stopwatch.Elapsed.Subtract(timeElapsedTotal).Seconds}s");
+                stopwatch.Stop();
 
-                timeElapsedTotal = stopwatch.Elapsed;
+                Console.WriteLine($"Arquivo de índice criado com sucesso, finalizado em {stopwatch.Elapsed}");
             }
             catch (Exception ex)
             {
@@ -653,7 +655,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
             if (File.Exists($"{_basePath}\\{fileName}"))
             {
                 // Aplicar a pesquisa binária diretamente no arquivo
-                int indiceEncontrado = PesquisaBinariaArquivo($"{_basePath}\\{fileName}", productId);
+                long indiceEncontrado = PesquisaBinariaArquivo($"{_basePath}\\{fileName}", productId, 27);
 
                 if (indiceEncontrado != -1)
                 {
@@ -676,7 +678,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
             if (File.Exists($"{_basePath}\\{fileName}"))
             {
                 // Aplicar a pesquisa binária diretamente no arquivo
-                int indiceEncontrado = PesquisaBinariaArquivo($"{_basePath}\\{fileName}", userId);
+                long indiceEncontrado = PesquisaBinariaArquivo($"{_basePath}\\{fileName}", userId, 27);
 
                 if (indiceEncontrado != -1)
                 {
@@ -695,7 +697,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
         }
 
         // Função para ler um registro em uma posição específica do arquivo
-        static (string productId, string end) LerRegistro(FileStream fs, long posicao)
+        public (string productId, string end) LerRegistro(FileStream fs, long posicao)
         {
             // Cada registro tem 25 bytes: 10 bytes para o productId, 15 bytes para o end
             byte[] buffer = new byte[25];
@@ -714,12 +716,11 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
         }
 
         // Função de pesquisa binária direto no arquivo
-        static int PesquisaBinariaArquivo(string caminho, string id)
+        public long PesquisaBinariaArquivo(string caminho, string id, long tamanhoRegistro)
         {
             // Abrir o arquivo em modo de leitura
             using (FileStream fs = new FileStream(caminho, FileMode.Open, FileAccess.Read))
             {
-                long tamanhoRegistro = 27;  // Cada registro tem 25 bytes
                 long esquerda = 0;
                 long direita = fs.Length / tamanhoRegistro - 1;
 
@@ -736,7 +737,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
 
                     if (comparacao == 0)
                     {
-                        return (int)meio;  // ProductId encontrado, retorna o índice do registro
+                        return meio;  // ProductId encontrado, retorna o índice do registro
                     }
                     else if (comparacao < 0)
                     {
@@ -750,6 +751,105 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
 
                 return -1;  // ProductId não encontrado
             }
+        }
+
+        public bool DeleteByProductId(string file, string idx, int bufferLength)
+        {
+            // Verifica se o arquivo existe
+            if (File.Exists($"{_basePath}\\{file}"))
+            {
+                using (FileStream fs = new FileStream($"{_basePath}\\{file}", FileMode.Open, FileAccess.ReadWrite))
+                {
+                    long position = (long.Parse(idx) * bufferLength);
+
+                    if (fs.Position < position)
+                    {
+                        Console.WriteLine("Id não encontrado.");
+                        return false;
+                    }
+
+                    byte[] buffer = new byte[bufferLength];
+
+                    // Mover o ponteiro do arquivo para a posição correta
+                    fs.Seek(position, SeekOrigin.Begin);
+
+                    // Ler 25 bytes (1 registro)
+                    fs.Read(buffer, 0, bufferLength);
+
+                    // Extrair o productId (primeiros 10 bytes) e end (próximos 15 bytes)
+                    string id = Encoding.ASCII.GetString(buffer, 0, 15).Trim();
+                    string productId = Encoding.ASCII.GetString(buffer, 15, 10).Trim();
+                    string categoryId = Encoding.ASCII.GetString(buffer, 25, 20).Trim();
+                    string brand = Encoding.ASCII.GetString(buffer, 45, 25).Trim();
+
+                    fs.Seek(position, SeekOrigin.Begin);
+                    BinaryWriter bw = new BinaryWriter(fs);
+
+                    bw.Write(id.PadRight(15).AsSpan(0, 15));
+                    bw.Write(productId.PadRight(10).AsSpan(0, 10));
+                    bw.Write(categoryId.PadRight(20).AsSpan(0, 20));
+                    bw.Write(brand.PadRight(25).AsSpan(0, 25));
+                    bw.Write(1.ToString().PadRight(5).AsSpan(0, 5));
+                    bw.Write("\n".ToString().PadLeft(5).AsSpan(0, 5));
+
+                }
+
+                Console.WriteLine($"ID '{idx}' deletado {idx}.");
+            }
+            else
+            {
+                Console.WriteLine($"ID '{idx}' não encontrado.");
+                return false;
+            }
+
+            return true;
+        }
+
+        public bool DeleteByUserId(string file, string idx, int bufferLength)
+        {
+            // Verifica se o arquivo existe
+            if (File.Exists($"{_basePath}\\{file}"))
+            {
+                using (FileStream fs = new FileStream($"{_basePath}\\{file}", FileMode.Open, FileAccess.ReadWrite))
+                {
+                    long position = (long.Parse(idx) * bufferLength);
+
+                    if (fs.Length < position)
+                    {
+                        Console.WriteLine("Id não encontrado.");
+                        return false;
+                    }
+
+                    byte[] buffer = new byte[bufferLength];
+
+                    // Mover o ponteiro do arquivo para a posição correta
+                    fs.Seek(position, SeekOrigin.Begin);
+
+                    // Ler 25 bytes (1 registro)
+                    fs.Read(buffer, 0, bufferLength);
+
+                    // Extrair o productId (primeiros 10 bytes) e end (próximos 15 bytes)
+                    fs.Seek(position, SeekOrigin.Begin);
+                    BinaryWriter bw = new BinaryWriter(fs);
+
+                    bw.Write(Encoding.ASCII.GetString(buffer, 0, 15).Trim().PadRight(15).AsSpan(0, 15));
+                    bw.Write(Encoding.ASCII.GetString(buffer, 15, 10).Trim().PadRight(10).AsSpan(0, 10));
+                    bw.Write(Encoding.ASCII.GetString(buffer, 25, 35).Trim().PadRight(35).AsSpan(0, 35));
+                    bw.Write(Encoding.ASCII.GetString(buffer, 60, 10).PadRight(10).AsSpan(0, 10));
+                    bw.Write(1.ToString().PadRight(5).AsSpan(0, 5));
+                    bw.Write("\n".ToString().PadLeft(5).AsSpan(0, 5));
+
+                }
+
+                Console.WriteLine($"ID '{idx}' deletado {idx}.");
+            }
+            else
+            {
+                Console.WriteLine($"ID '{idx}' não encontrado.");
+                return false;
+            }
+
+            return true;
         }
     }
 }
