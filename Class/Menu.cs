@@ -25,8 +25,11 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 Console.WriteLine("1. Cria arquivos .bin");
                 Console.WriteLine("2. Cria Indice produto");
                 Console.WriteLine("3. Mostra o arquivo de produtos");
-                Console.WriteLine("4. Qual produto mais procurado?");
-                Console.WriteLine("5. Qual usuario com mais endereço?");
+                Console.WriteLine("4. Mostra o arquivo de user");
+                Console.WriteLine("5. Qual produto mais procurado?");
+                Console.WriteLine("6. Qual usuario com mais endereço?");
+                Console.WriteLine("7. Pesquisa binária por Id do produto?");
+                Console.WriteLine("8. Pesquisa binária por Id do cliente?");
                 Console.WriteLine("0. Sair");
                 Console.Write("Escolha uma opção: ");
 
@@ -46,15 +49,27 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                         break;
 
                     case "3":
-                        fileHandler.showProductDataBinaryFile("Product");
+                        fileHandler.showDataBinaryFile("Product");
                         break;
 
                     case "4":
-                        fileHandler.ProductWithMoreInteraction("IndexProductId.bin");
+                        fileHandler.showDataBinaryFile("User");
                         break;
 
                     case "5":
+                        fileHandler.ProductWithMoreInteraction("IndexProductId.bin");
+                        break;
+
+                    case "6":
                         fileHandler.UserWithMoreInteraction("IndexUserId.bin");
+                        break;
+
+                    case "7":
+                        fileHandler.FindProductId( GetId() ,"IndexProductId.bin");
+                        break;
+
+                    case "8":
+                        fileHandler.FindUserId(GetId(), "IndexUserId.bin");
                         break;
 
                     case "0":
@@ -67,6 +82,12 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
         private static string GetBasePath()
         {
             return Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName + "\\Data";
+        }
+
+        private string GetId()
+        {
+            Console.WriteLine("Digite o ID que deseja procurar:");
+            return Console.ReadLine();
         }
     }
 }

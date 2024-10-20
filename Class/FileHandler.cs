@@ -474,7 +474,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
         }
 
         //TODO: Fazer certo
-        public void showProductDataBinaryFile(string binaryFilePath)
+        public void showDataBinaryFile(string binaryFilePath)
         {
             using FileStream file = new FileStream($"{_basePath}\\{binaryFilePath}.bin", FileMode.Open);
 
@@ -644,6 +644,111 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
             else
             {
                 Console.WriteLine("Nenhum usuário encontrado no arquivo de índice.");
+            }
+        }
+
+        public void FindProductId(string productId, string fileName)
+        {
+            // Verifica se o arquivo existe
+            if (File.Exists($"{_basePath}\\{fileName}"))
+            {
+                // Aplicar a pesquisa binária diretamente no arquivo
+                int indiceEncontrado = PesquisaBinariaArquivo($"{_basePath}\\{fileName}", productId);
+
+                if (indiceEncontrado != -1)
+                {
+                    Console.WriteLine($"Product ID '{productId}' encontrado no registro {indiceEncontrado}.");
+                }
+                else
+                {
+                    Console.WriteLine($"Product ID '{productId}' não encontrado.");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Arquivo não encontrado.");
+            }
+
+        }
+        public void FindUserId(string userId, string fileName)
+        {
+            // Verifica se o arquivo existe
+            if (File.Exists($"{_basePath}\\{fileName}"))
+            {
+                // Aplicar a pesquisa binária diretamente no arquivo
+                int indiceEncontrado = PesquisaBinariaArquivo($"{_basePath}\\{fileName}", userId);
+
+                if (indiceEncontrado != -1)
+                {
+                    Console.WriteLine($"User ID '{userId}' encontrado no registro {indiceEncontrado}.");
+                }
+                else
+                {
+                    Console.WriteLine($"User ID '{userId}' não encontrado.");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Arquivo não encontrado.");
+            }
+
+        }
+
+        // Função para ler um registro em uma posição específica do arquivo
+        static (string productId, string end) LerRegistro(FileStream fs, long posicao)
+        {
+            // Cada registro tem 25 bytes: 10 bytes para o productId, 15 bytes para o end
+            byte[] buffer = new byte[25];
+
+            // Mover o ponteiro do arquivo para a posição correta
+            fs.Seek(posicao, SeekOrigin.Begin);
+
+            // Ler 25 bytes (1 registro)
+            fs.Read(buffer, 0, 25);
+
+            // Extrair o productId (primeiros 10 bytes) e end (próximos 15 bytes)
+            string register = Encoding.ASCII.GetString(buffer, 0, 10).Trim();
+            string end = Encoding.ASCII.GetString(buffer, 10, 15).Trim();
+
+            return (register, end);
+        }
+
+        // Função de pesquisa binária direto no arquivo
+        static int PesquisaBinariaArquivo(string caminho, string id)
+        {
+            // Abrir o arquivo em modo de leitura
+            using (FileStream fs = new FileStream(caminho, FileMode.Open, FileAccess.Read))
+            {
+                long tamanhoRegistro = 27;  // Cada registro tem 25 bytes
+                long esquerda = 0;
+                long direita = fs.Length / tamanhoRegistro - 1;
+
+                while (esquerda <= direita)
+                {
+                    long meio = (esquerda + direita) / 2;
+                    long posicao = meio * tamanhoRegistro;
+
+                    // Ler o registro na posição 'meio'
+                    var (register, _) = LerRegistro(fs, posicao);
+
+                    // Comparar o productId
+                    int comparacao = string.Compare(register, id, StringComparison.Ordinal);
+
+                    if (comparacao == 0)
+                    {
+                        return (int)meio;  // ProductId encontrado, retorna o índice do registro
+                    }
+                    else if (comparacao < 0)
+                    {
+                        esquerda = meio + 1;
+                    }
+                    else
+                    {
+                        direita = meio - 1;
+                    }
+                }
+
+                return -1;  // ProductId não encontrado
             }
         }
     }
