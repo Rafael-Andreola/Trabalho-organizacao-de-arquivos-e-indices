@@ -24,7 +24,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 Console.WriteLine("==== MENU ====");
                 Console.WriteLine("1. Cria arquivos .bin");
                 Console.WriteLine("2. Cria Indice produto");
-                Console.WriteLine("4. Mostra o arquivo de produtos");
+                Console.WriteLine("3. Mostra o arquivo de produtos");
                 Console.WriteLine("5. Executa merge");
                 Console.WriteLine("0. Sair");
                 Console.Write("Escolha uma opção: ");
@@ -45,11 +45,11 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                         break;
 
                     case "3":
-                        fileHandler.SortAndSaveProductDataBinaryFile("productData");
+                        fileHandler.showProductDataBinaryFile("Product");
                         break;
 
                     case "4":
-                        fileHandler.showProductDataBinaryFile("Product");
+                        
                         break;
 
                     case "5":

@@ -196,6 +196,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                     writerProduct.Write(rowDataProduct.productId.PadRight(10).AsSpan(0, 10));
                     writerProduct.Write(rowDataProduct.categoryId.PadRight(20).AsSpan(0, 20));
                     writerProduct.Write(rowDataProduct.brand.PadRight(25).AsSpan(0, 25));
+                    writerProduct.Write(0);
                     writerProduct.Write("\n");
 
                     priorityQueueProduct.Remove(firstProduct);
@@ -309,6 +310,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                     writerUser.Write(rowDataUser.userId.PadRight(10).AsSpan(0, 10));
                     writerUser.Write(rowDataUser.userSession.PadRight(35).AsSpan(0, 35));
                     writerUser.Write(rowDataUser.eventType.PadRight(10).AsSpan(0, 10));
+                    writerUser.Write(0);
                     writerUser.Write("\n");
 
                     priorityQueueUser.Remove(firstUser);
@@ -363,14 +365,9 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
         {
             try
             {
-                // Lê os dados do arquivo em tamanhos fixos
-
                 string productId = new string(reader.ReadChars(10)).Trim();
                 string categoryId = new string(reader.ReadChars(20)).Trim();
                 string brand = new string(reader.ReadChars(25)).Trim();
-                //string userId = new string(reader.ReadChars(15)).Trim();
-                //string userSession = new string(reader.ReadChars(35)).Trim();
-                //string eventType = new string(reader.ReadChars(10)).Trim();
                 
                 // Cria um novo objeto ProductData com os dados lidos
                 row = new Row
@@ -379,9 +376,6 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                     productId = productId,
                     categoryId = categoryId,
                     brand = brand,
-                    //userId = userId,
-                    //userSession = userSession,
-                    //eventType = eventType
                 };
 
                 return true; // Leitura bem-sucedida
@@ -549,7 +543,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                     autoIncremt = new string(reader.ReadChars(15)).Trim();
                     currentId = new string(reader.ReadChars(10)).Trim();
 
-                    reader.BaseStream.Seek(47, SeekOrigin.Current); // Pula os outros campos
+                    reader.BaseStream.Seek(48, SeekOrigin.Current); // Pula os outros campos
 
                     if (currentId != previousId)
                     {
