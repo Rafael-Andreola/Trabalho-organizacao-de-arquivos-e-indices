@@ -30,6 +30,10 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 Console.WriteLine("6. Qual usuario com mais endereço?");
                 Console.WriteLine("7. Pesquisa binária por Id do produto?");
                 Console.WriteLine("8. Pesquisa binária por Id do cliente?");
+                Console.WriteLine("9. Inserções");
+                Console.WriteLine("10. Remoções");
+                Console.WriteLine("11. Reorganizar");
+
                 Console.WriteLine("0. Sair");
                 Console.Write("Escolha uma opção: ");
 
@@ -72,8 +76,46 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                         fileHandler.FindUserId(GetId(), "IndexUserId.bin");
                         break;
 
+                    case "9":
+                        ShowMenuInsert();
+                        break;
+
+                    case "10":
+                        break;
+
+                    case "11":
+                        fileHandler.ReorganizeDataFiles("Product.bin", "productToInsert", "NewProduct.bin", "product");
+                        fileHandler.ReorganizeDataFiles("User.bin", "userToInsert", "NewUser.bin", "user");
+                        break;
+
                     case "0":
                         Console.WriteLine("Saindo...");
+                        return;
+                }
+            }
+        }
+
+        private void ShowMenuInsert()
+        {
+            int option;
+            while(true)
+            {
+                Console.Clear();
+                Console.WriteLine("1.Inserir produto\n2.Inserir usuario\n0.Sair\n");
+                option = Convert.ToInt32(Console.ReadLine());
+
+
+                switch (option)
+                {
+                    case 1:
+                        fileHandler.InsertProductIntoAuxFile("productToInsert", newProduct());
+                        break;
+
+                    case 2:
+                        fileHandler.InsertUserIntoAuxFile("userToUser", NewUser());
+                        break;
+
+                    case 0:
                         return;
                 }
             }
@@ -88,6 +130,38 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
         {
             Console.WriteLine("Digite o ID que deseja procurar:");
             return Console.ReadLine();
+        }
+
+        private ProductData newProduct()
+        {
+            var product = new ProductData();
+
+            Console.WriteLine("Id do produto:");
+            product.productId = Console.ReadLine();
+
+            Console.WriteLine("Id da categoria do produto:");
+            product.categoryId = Console.ReadLine();
+
+            Console.WriteLine("Marca:");
+            product.brand = Console.ReadLine();
+
+            return product;
+        }
+
+        private UserData NewUser()
+        {
+            var user = new UserData();
+
+            Console.WriteLine("Id do usuario:");
+            user.userId = Console.ReadLine();
+
+            Console.WriteLine("Id da sessão do usuario:");
+            user.userSession= Console.ReadLine();
+
+            Console.WriteLine("Tipo de evento:");
+            user.eventType = Console.ReadLine();
+
+            return user;
         }
     }
 }
