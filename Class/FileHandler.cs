@@ -107,82 +107,33 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
 
         public List<string> ProcessAndSaveSortedBlocksFromBinary(string mainBinFilePath, string auxBinFilePath, string orderCriterium)
         {
-            int bufferSize = 5000000; // Tamanho do buffer
-            var tempFiles = new List<string>(); // Lista para armazenar arquivos temporários
-            var buffer = new List<Row>(); // Buffer para armazenar registros lidos
+            int bufferSize = 2500000; // Tamanho do buffer
+            var tempFiles = new List<string>(); // Lista de arquivos temporários
+            var buffer = new List<Row>(); // Buffer para armazenar registros
             int fileCount = 0; // Contador de arquivos temporários
 
             var stopwatch = new Stopwatch();
-            TimeSpan timeElapsedTotal = new TimeSpan();
             stopwatch.Start();
 
             try
             {
-                using (var mainFileStream = new FileStream($"{_basePath}\\{mainBinFilePath}", FileMode.Open))
-                using (var reader = new BinaryReader(mainFileStream))
+                TimeSpan timeElapsedTotal = TimeSpan.Zero;
+
+                // Processa o arquivo principal
+                ProcessFile(mainBinFilePath, buffer, bufferSize, ref fileCount, tempFiles, orderCriterium, ref timeElapsedTotal, stopwatch, "main");
+
+                // Se ainda restar dados no buffer após o arquivo principal
+                if (buffer.Count > 0 || !string.IsNullOrEmpty(auxBinFilePath))
                 {
-                    while (mainFileStream.Position < mainFileStream.Length)
-                    {
-                        var row = ReadRowFromBinary(reader);
-
-                        buffer.Add(row);
-
-                        if (buffer.Count >= bufferSize)
-                        {
-                            // Grava o buffer em um arquivo temporário
-                            string tmpFile = $"{_basePath}\\temp_{fileCount}.bin";
-                            tempFiles.Add(tmpFile);
-
-                            // Ordena e grava o buffer em um arquivo binário temporário
-                            WriteBufferToBinaryFile(buffer, tmpFile, orderCriterium);
-
-                            Console.WriteLine($"File {fileCount} finalizado em {stopwatch.Elapsed.Subtract(timeElapsedTotal).Seconds}s");
-                            timeElapsedTotal = stopwatch.Elapsed;
-
-                            buffer.Clear();
-                            fileCount++;
-                        }
-                    }
+                    // Processa o arquivo auxiliar se ele existir
+                    ProcessFile(auxBinFilePath, buffer, bufferSize, ref fileCount, tempFiles, orderCriterium, ref timeElapsedTotal, stopwatch, "aux");
                 }
 
-                // Se ainda restar dados no buffer após o processamento do arquivo principal
+                // Grava os dados restantes do buffer
                 if (buffer.Count > 0)
                 {
-                    // Agora continua lendo do arquivo auxiliar
-                    using (var auxFileStream = new FileStream($"{_basePath}\\{auxBinFilePath}", FileMode.Open))
-                    using (var auxReader = new BinaryReader(auxFileStream))
-                    {
-                        while (auxFileStream.Position < auxFileStream.Length)
-                        {
-                            var row = ReadRowFromBinary(auxReader); // Lê os dados do arquivo auxiliar
-                            buffer.Add(row);
-
-                            if (buffer.Count >= bufferSize)
-                            {
-                                string tmpFile = $"{_basePath}\\temp_{fileCount}.bin";
-                                tempFiles.Add(tmpFile);
-
-                                // Ordena e grava o buffer em um arquivo binário temporário
-                                WriteBufferToBinaryFile(buffer, tmpFile, orderCriterium);
-
-                                Console.WriteLine($"File {fileCount} finalizado em {stopwatch.Elapsed.Subtract(timeElapsedTotal).Seconds}s");
-                                timeElapsedTotal = stopwatch.Elapsed;
-
-                                buffer.Clear();
-                                fileCount++;
-                            }
-                        }
-                    }
-
-                    // Grava os últimos dados restantes
-                    if (buffer.Count > 0)
-                    {
-                        string tmpFile = $"{_basePath}\\temp_{fileCount}.bin";
-                        tempFiles.Add(tmpFile);
-
-                        WriteBufferToBinaryFile(buffer, tmpFile, orderCriterium);
-                        Console.WriteLine($"File {fileCount} finalizado em {stopwatch.Elapsed.Subtract(timeElapsedTotal).Seconds}s");
-                    }
+                    WriteBufferToTemporaryFile(buffer, fileCount, tempFiles, orderCriterium);
+                    Console.WriteLine($"File {fileCount} finalizado em {stopwatch.Elapsed.Subtract(timeElapsedTotal).Seconds}s");
                 }
             }
             catch (Exception ex)
@@ -197,6 +148,91 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
 
             return tempFiles;
         }
+
+        // Método para processar um arquivo binário e armazenar em arquivos temporários
+        private void ProcessFile(string filePath, List<Row> buffer, int bufferSize, ref int fileCount, List<string> tempFiles, string orderCriterium, ref TimeSpan timeElapsedTotal, Stopwatch stopwatch, string typeFile)
+        {
+            Row row = null;
+
+            if (string.IsNullOrEmpty(filePath)) return;
+
+            using (var fileStream = new FileStream($"{_basePath}\\{filePath}", FileMode.Open))
+            using (var reader = new BinaryReader(fileStream))
+            {
+                while (fileStream.Position < fileStream.Length)
+                {
+                    // Pula o campo extra antes dos IDs
+                    if (typeFile == "main")
+                    {
+                        reader.ReadBytes(15); // Ajuste conforme o tamanho do campo extra
+
+                        row = ReadRow(reader, orderCriterium);
+
+                        reader.ReadBytes(5);
+                    }
+                    else if (typeFile == "aux")
+                    {
+                        row = ReadRow(reader, orderCriterium);
+                    }
+                    
+                    if (row.deleteField == "0") 
+                    {
+                        buffer.Add(row);
+                    }
+
+                    // Verifica se o buffer atingiu o tamanho limite
+                    if (buffer.Count >= bufferSize)
+                    {
+                        WriteBufferToTemporaryFile(buffer, fileCount, tempFiles, orderCriterium);
+                        Console.WriteLine($"File {fileCount} finalizado em {stopwatch.Elapsed.Subtract(timeElapsedTotal).Seconds}s");
+                        timeElapsedTotal = stopwatch.Elapsed;
+
+                        buffer.Clear();
+                        fileCount++;
+                    }
+                }
+            }
+        }
+
+        // Método para ler uma linha (Row) baseado no critério de ordenação
+        private Row ReadRow(BinaryReader reader, string orderCriterium)
+        {
+            Row row = new Row();
+
+            if (orderCriterium == "product")
+            {
+                row.productId = new string(reader.ReadChars(10)).Trim();
+                row.categoryId = new string(reader.ReadChars(20)).Trim();
+                row.brand = new string(reader.ReadChars(25)).Trim();
+            }
+            else if (orderCriterium == "user")
+            {
+                row.userId = new string(reader.ReadChars(10)).Trim();
+                row.userSession = new string(reader.ReadChars(35)).Trim();
+                row.eventType = new string(reader.ReadChars(10)).Trim();
+            }
+
+            row.deleteField = new string(reader.ReadChars(5)).Trim();
+
+            return row;
+        }
+
+        // Método para gravar o buffer em um arquivo temporário ordenado
+        private void WriteBufferToTemporaryFile(List<Row> buffer, int fileCount, List<string> tempFiles, string orderCriterium)
+        {
+            string tmpFile = $"{_basePath}\\temp_{fileCount}.bin";
+            tempFiles.Add(tmpFile);
+
+            if (orderCriterium == "product")
+            {
+                WriteProductBufferToBinaryFile([..buffer.OrderBy(p => long.Parse(p.productId))], tmpFile);
+            }
+            else if (orderCriterium == "user")
+            {
+                WriteUserBufferToBinaryFile([..buffer.OrderBy(u => long.Parse(u.userId))], tmpFile);
+            }
+        }
+
 
         // Função auxiliar para ler uma linha do arquivo binário
         private Row ReadRowFromBinary(BinaryReader reader)

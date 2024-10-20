@@ -30,9 +30,10 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 Console.WriteLine("6. Qual usuario com mais endereço?");
                 Console.WriteLine("7. Pesquisa binária por Id do produto?");
                 Console.WriteLine("8. Pesquisa binária por Id do cliente?");
-                Console.WriteLine("9. Inserções");
-                Console.WriteLine("10. Remoções");
-                Console.WriteLine("11. Reorganizar");
+                Console.WriteLine("9. Excluir produto");
+                Console.WriteLine("10. Excluir usuario");
+                Console.WriteLine("11. Inserção");
+                Console.WriteLine("12. Reorganizar");
 
                 Console.WriteLine("0. Sair");
                 Console.Write("Escolha uma opção: ");
@@ -83,16 +84,18 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                         fileHandler.DeleteByUserId("User.bin", GetId("Digite o ID que deseja deletar:"), 80);
                         break;
 
-                    case "9":
+                    case "11":
                         ShowMenuInsert();
                         break;
 
-                    case "10":
+                    case "12":
+                        fileHandler.CreateProductData(fileHandler.ProcessAndSaveSortedBlocksFromBinary("Product.bin", "productToInsert", "product"));
+                        fileHandler.CreateUserData(fileHandler.ProcessAndSaveSortedBlocksFromBinary("User.bin", "userToInsert", "user"));
+
                         break;
 
-                    case "11":
-                        fileHandler.ReorganizeDataFiles("Product.bin", "productToInsert", "NewProduct.bin", "product");
-                        fileHandler.ReorganizeDataFiles("User.bin", "userToInsert", "NewUser.bin", "user");
+                    case "13":
+                        
                         break;
 
                     case "0":
