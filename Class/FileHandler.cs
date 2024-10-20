@@ -523,9 +523,54 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
             return tempFiles;
         }
 
-        public void CreateIndexes()
+        public void CreateIndex(string binFilePath, string indexFileName)
         {
-            throw new NotImplementedException();
+            using var fileStream = new FileStream($"{_basePath}\\{binFilePath}", FileMode.Open);
+            using var reader = new BinaryReader(fileStream);
+
+            using var indexFileStream = new FileStream($"{_basePath}\\{indexFileName}", FileMode.Create);
+            using var indexWriter = new BinaryWriter(indexFileStream);
+
+            string previousId = string.Empty;
+            string autoIncremt = string.Empty;
+
+            var stopwatch = new Stopwatch();
+
+            stopwatch.Start();
+
+            TimeSpan timeElapsedTotal = new TimeSpan();
+
+            try
+            {
+                while (fileStream.Position < fileStream.Length)
+                {
+                    string currentId;
+
+                    autoIncremt = new string(reader.ReadChars(15)).Trim();
+                    currentId = new string(reader.ReadChars(10)).Trim();
+
+                    reader.BaseStream.Seek(47, SeekOrigin.Current); // Pula os outros campos
+
+                    if (currentId != previousId)
+                    {
+                        indexWriter.Write(currentId.PadRight(10).AsSpan(0, 10)); 
+                        indexWriter.Write(autoIncremt.PadRight(15).AsSpan(0, 15));
+                        indexWriter.Write("\n");
+
+                        // Atualizar o id anterior para o atual
+                        previousId = currentId;
+                    }
+                }
+
+                Console.WriteLine($"Arquivo de índice criado com sucesso, finalizado em {stopwatch.Elapsed.Subtract(timeElapsedTotal).Seconds}s");
+
+                timeElapsedTotal = stopwatch.Elapsed;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao criar o arquivo de índice: {ex.Message}");
+            }
         }
+
     }
 }

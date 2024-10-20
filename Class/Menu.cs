@@ -40,7 +40,8 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                         break;
 
                     case "2":
-                        fileHandler.CreateIndexes();
+                        fileHandler.CreateIndex("Product.bin", "IndexProductId.bin");
+                        fileHandler.CreateIndex("User.bin", "IndexUserId.bin");
                         break;
 
                     case "3":
