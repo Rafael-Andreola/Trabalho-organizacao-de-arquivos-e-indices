@@ -25,8 +25,9 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 Console.WriteLine("1. Cria arquivos .bin");
                 Console.WriteLine("2. Cria Indice produto");
                 Console.WriteLine("3. Mostra o arquivo de produtos");
-                Console.WriteLine("4. Qual produto mais se repete?");
+                Console.WriteLine("4. Mostra o arquivo de usuários");
                 Console.WriteLine("5. Qual produto mais se repete?");
+                Console.WriteLine("6. Qual usuário que teve mais interações?");
                 Console.WriteLine("0. Sair");
                 Console.Write("Escolha uma opção: ");
 
@@ -50,10 +51,14 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                         break;
 
                     case "4":
-                        fileHandler.ProductWithMoreInteraction("IndexProductId.bin");
+                        fileHandler.showProductDataBinaryFile("User");
                         break;
 
                     case "5":
+                        fileHandler.ProductWithMoreInteraction("IndexProductId.bin");
+                        break;
+
+                    case "6":
                         fileHandler.UserWithMoreInteraction("IndexUserId.bin");
                         break;
 
