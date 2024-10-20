@@ -25,7 +25,8 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 Console.WriteLine("1. Cria arquivos .bin");
                 Console.WriteLine("2. Cria Indice produto");
                 Console.WriteLine("3. Mostra o arquivo de produtos");
-                Console.WriteLine("5. Executa merge");
+                Console.WriteLine("4. Qual produto mais se repete?");
+                Console.WriteLine("5. Qual produto mais se repete?");
                 Console.WriteLine("0. Sair");
                 Console.Write("Escolha uma opção: ");
 
@@ -49,12 +50,11 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                         break;
 
                     case "4":
-                        
+                        fileHandler.ProductWithMoreInteraction("IndexProductId.bin");
                         break;
 
                     case "5":
-                        //TODO: Arrumar GetBinaryReaders
-                        //fileHandler.CreateDataProduct(fileHandler.GetBinaryReaders(9));
+                        fileHandler.UserWithMoreInteraction("IndexUserId.bin");
                         break;
 
                     case "0":

@@ -566,5 +566,87 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
             }
         }
 
+        public void ProductWithMoreInteraction(string indexFileName)
+        {
+            string? previousProductId = null;
+            long? previousPosition = null;
+
+            string? maxProductId = null;
+            long maxRecordCount = 0;
+
+            using var indexFileStream = new FileStream($"{_basePath}\\{indexFileName}", FileMode.Open);
+            using var indexReader = new StreamReader(indexFileStream);
+
+            string? line;
+            while ((line = indexReader.ReadLine()) != null)
+            {
+                string productId = line.Substring(0, 10).Trim();
+                long currentPosition = long.Parse(line.Substring(10, 15).Trim());
+
+                if (previousProductId != null)
+                {
+                    long recordCount = currentPosition - previousPosition.GetValueOrDefault();
+
+                    if (recordCount > maxRecordCount)
+                    {
+                        maxRecordCount = recordCount;
+                        maxProductId = previousProductId;
+                    }
+                }
+                previousProductId = productId;
+                previousPosition = currentPosition;
+            }
+
+            if (maxProductId != null)
+            {
+                Console.WriteLine($"O produto com mais registros é '{maxProductId}' com {maxRecordCount} registros.");
+            }
+            else
+            {
+                Console.WriteLine("Nenhum produto encontrado no arquivo de índice.");
+            }
+        }
+
+        public void UserWithMoreInteraction(string indexFileName)
+        {
+            string? previousProductId = null;
+            long? previousPosition = null;
+
+            string? maxProductId = null;
+            long maxRecordCount = 0;
+
+            using var indexFileStream = new FileStream($"{_basePath}\\{indexFileName}", FileMode.Open);
+            using var indexReader = new StreamReader(indexFileStream);
+
+            string? line;
+            while ((line = indexReader.ReadLine()) != null)
+            {
+                string productId = line.Substring(0, 10).Trim();
+                long currentPosition = long.Parse(line.Substring(10, 15).Trim());
+
+                if (previousProductId != null)
+                {
+                    long recordCount = currentPosition - previousPosition.GetValueOrDefault();
+
+                    if (recordCount > maxRecordCount)
+                    {
+                        maxRecordCount = recordCount;
+                        maxProductId = previousProductId;
+                    }
+                }
+                previousProductId = productId;
+                previousPosition = currentPosition;
+            }
+
+            if (maxProductId != null)
+            {
+                Console.WriteLine($"O produto com mais registros é '{maxProductId}' com {maxRecordCount} registros.");
+            }
+            else
+            {
+                Console.WriteLine("Nenhum produto encontrado no arquivo de índice.");
+            }
+        }
+
     }
 }
