@@ -174,8 +174,8 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                     {
                         row = ReadRow(reader, orderCriterium);
                     }
-                    
-                    if (row.deleteField == "0") 
+
+                    if ((row.deleteField == "0" || row.deleteField == "") && row != null)
                     {
                         buffer.Add(row);
                     }
@@ -213,6 +213,11 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
             }
 
             row.deleteField = new string(reader.ReadChars(5)).Trim();
+
+            if((row.userId == "" && row.productId == null) || (row.userId == null && row.productId == ""))
+            {
+                return null;
+            }
 
             return row;
         }

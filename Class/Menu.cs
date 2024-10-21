@@ -44,7 +44,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                     case "1":
                         fileHandler.CreateProductData(fileHandler.ProcessAndSaveSortedBlocks(_fileName, "product"));
                         fileHandler.CreateUserData(fileHandler.ProcessAndSaveSortedBlocks(_fileName, "user"));
-                        Console.WriteLine("Dados do produto gravados no arquivo binário.");
+                        Console.WriteLine("Dados gravados no arquivo binário.");
                         break;
 
                     case "2":
@@ -81,8 +81,8 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                         break;
 
                     case "10":
-                        fileHandler.CreateProductData(fileHandler.ProcessAndSaveSortedBlocksFromBinary("Product.bin", "productToInsert", "product"));
-                        fileHandler.CreateUserData(fileHandler.ProcessAndSaveSortedBlocksFromBinary("User.bin", "userToInsert", "user"));
+                        fileHandler.CreateProductData(fileHandler.ProcessAndSaveSortedBlocksFromBinary("Product.bin", "productToInsert.bin", "product"));
+                        fileHandler.CreateUserData(fileHandler.ProcessAndSaveSortedBlocksFromBinary("User.bin", "userToInsert.bin", "user"));
                         break;
 
                     case "11":
