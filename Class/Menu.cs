@@ -23,7 +23,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
             {
                 Console.WriteLine("==== MENU ====");
                 Console.WriteLine("1. Cria arquivos .bin");
-                Console.WriteLine("2. Cria Indice produto");
+                Console.WriteLine("2. Criar Indices");
                 Console.WriteLine("3. Mostra o arquivo de produtos");
                 Console.WriteLine("4. Mostra o arquivo de user");
                 Console.WriteLine("5. Qual produto mais procurado?");

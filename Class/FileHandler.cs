@@ -860,7 +860,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                     long posicao = meio * tamanhoRegistro;
 
                     // Ler o registro na posição 'meio'
-                    var (register, _) = LerRegistro(fs, posicao);
+                    var (register, end) = LerRegistro(fs, posicao);
 
                     // Comparar o productId
                     int comparacao = string.Compare(register, id, StringComparison.Ordinal);
