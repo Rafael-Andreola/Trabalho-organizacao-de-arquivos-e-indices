@@ -658,11 +658,15 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                     autoIncremt = new string(reader.ReadChars(15)).Trim();
                     currentId = new string(reader.ReadChars(10)).Trim();
 
-                    //reader.ReadString();
-                    //reader.BaseStream.Seek(55, SeekOrigin.Current); // Pula os outros campos
+                    if(currentId == "")
+                    {
+                        continue;
+                    }
 
                     if (currentId != previousId)
                     {
+                        Debug.Assert(autoIncremt != "");
+
                         indexWriter.Write(currentId.PadRight(10).AsSpan(0, 10)); 
                         indexWriter.Write(autoIncremt.PadRight(15).AsSpan(0, 15));
                         indexWriter.Write("\n");
@@ -697,6 +701,12 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
             while ((line = indexReader.ReadLine()) != null)
             {
                 string productId = line.Substring(0, 10).Trim();
+
+                if(productId == "")
+                {
+                    continue;
+                }
+
                 long currentPosition = long.Parse(line.Substring(10, 15).Trim());
 
                 if (previousProductId != null)

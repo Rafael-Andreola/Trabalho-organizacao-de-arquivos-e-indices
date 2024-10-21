@@ -31,7 +31,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 Console.WriteLine("7. Pesquisa binária por Id do produto?");
                 Console.WriteLine("8. Pesquisa binária por Id do cliente?");
                 Console.WriteLine("9. Inserções");
-                Console.WriteLine("10. Remoções");
+                Console.WriteLine("10. Reordenar arquivos bin");
                 Console.WriteLine("11. Deletar indice arquivo de dados Product");
                 Console.WriteLine("12. Deletar indice arquivo de dados User");
                 Console.WriteLine("0. Sair");
@@ -76,14 +76,13 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                         fileHandler.FindUserId(GetId("Digite o ID do usuario que deseja procurar:"), "IndexUserId.bin");
                         break;
 
-                    case "11":
+                    case "9":
                         ShowMenuInsert();
                         break;
 
-                    case "12":
+                    case "10":
                         fileHandler.CreateProductData(fileHandler.ProcessAndSaveSortedBlocksFromBinary("Product.bin", "productToInsert", "product"));
                         fileHandler.CreateUserData(fileHandler.ProcessAndSaveSortedBlocksFromBinary("User.bin", "userToInsert", "user"));
-
                         break;
 
                     case "11":
@@ -114,11 +113,11 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 switch (option)
                 {
                     case 1:
-                        fileHandler.InsertProductIntoAuxFile("productToInsert", newProduct());
+                        fileHandler.InsertProductIntoAuxFile("productToInsert.bin", newProduct());
                         break;
 
                     case 2:
-                        fileHandler.InsertUserIntoAuxFile("userToUser", NewUser());
+                        fileHandler.InsertUserIntoAuxFile("userToInsert.bin", NewUser());
                         break;
 
                     case 0:
