@@ -76,11 +76,14 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                         fileHandler.FindUserId(GetId("Digite o ID do usuario que deseja procurar:"), "IndexUserId.bin");
                         break;
 
-                    case "9":
+                    case "11":
                         ShowMenuInsert();
                         break;
 
-                    case "10":
+                    case "12":
+                        fileHandler.CreateProductData(fileHandler.ProcessAndSaveSortedBlocksFromBinary("Product.bin", "productToInsert", "product"));
+                        fileHandler.CreateUserData(fileHandler.ProcessAndSaveSortedBlocksFromBinary("User.bin", "userToInsert", "user"));
+
                         break;
 
                     case "11":
