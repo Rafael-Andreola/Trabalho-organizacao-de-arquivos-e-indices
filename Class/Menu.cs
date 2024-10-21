@@ -32,8 +32,8 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 Console.WriteLine("8. Pesquisa binária por Id do cliente?");
                 Console.WriteLine("9. Inserções");
                 Console.WriteLine("10. Remoções");
-                Console.WriteLine("11. Reorganizar");
-
+                Console.WriteLine("11. Deletar indice arquivo de dados Product");
+                Console.WriteLine("12. Deletar indice arquivo de dados User");
                 Console.WriteLine("0. Sair");
                 Console.Write("Escolha uma opção: ");
 
@@ -75,13 +75,6 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                     case "8":
                         fileHandler.FindUserId(GetId("Digite o ID do usuario que deseja procurar:"), "IndexUserId.bin");
                         break;
-                    case "9":
-                        fileHandler.DeleteByProductId("Product.bin", GetId("Digite o ID que deseja deletar:"), 80);
-                        break;
-
-                    case "10":
-                        fileHandler.DeleteByUserId("User.bin", GetId("Digite o ID que deseja deletar:"), 80);
-                        break;
 
                     case "9":
                         ShowMenuInsert();
@@ -91,8 +84,11 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                         break;
 
                     case "11":
-                        fileHandler.ReorganizeDataFiles("Product.bin", "productToInsert", "NewProduct.bin", "product");
-                        fileHandler.ReorganizeDataFiles("User.bin", "userToInsert", "NewUser.bin", "user");
+                        fileHandler.DeleteByProductId("Product.bin", GetId("Digite o ID que deseja deletar:"), 80);
+                        break;
+
+                    case "12":
+                        fileHandler.DeleteByUserId("User.bin", GetId("Digite o ID que deseja deletar:"), 80);
                         break;
 
                     case "0":

@@ -565,56 +565,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 return false;
             }
         }
-
-        public List<ProductData> ReadFromProductDataFile(string binaryFilePath)
-        {
-            var productDataList = new List<ProductData>();
-
-            using (var fileStream = new FileStream($"{_basePath}\\{binaryFilePath}", FileMode.Open))
-            using (var reader = new BinaryReader(fileStream))
-            {
-                while (fileStream.Position < fileStream.Length)
-                {
-                    var productId = reader.ReadString();
-                    var categoryId = reader.ReadString();
-                    var brand = reader.ReadString();
-
-                    productDataList.Add(new ProductData
-                    {
-                        productId = productId,
-                        categoryId = categoryId,
-                        brand = brand
-                    });
-                }
-            }
-
-            return productDataList;
-        }
-
-        public void SaveSortedProductData(string binaryFilePath, List<ProductData> productDataList)
-        {
-            using (var fileStream = new FileStream($"{_basePath}\\{binaryFilePath}", FileMode.Create))
-            using (var writer = new BinaryWriter(fileStream))
-            {
-                foreach (var product in productDataList)
-                {
-                    writer.Write(product.productId);
-                    writer.Write(product.categoryId);
-                    writer.Write(product.brand);
-                }
-            }
-        }
-
-        public void SortAndSaveProductDataBinaryFile(string binaryFilePath)
-        {
-            var productDataList = ReadFromProductDataFile(binaryFilePath);
-
-            var sortedData = productDataList.OrderBy(p => p.productId).ToList();
-
-            SaveSortedProductData(binaryFilePath, sortedData);
-        }
-
-        //TODO: Fazer certo
+        
         public void showDataBinaryFile(string binaryFilePath)
         {
             using FileStream file = new FileStream($"{_basePath}\\{binaryFilePath}.bin", FileMode.Open);
@@ -641,19 +592,6 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                     break;
                 }
             }
-        }
-
-        public List<string> GetBinaryReaders(int num)
-        {
-            //TODO: fazer certo
-            List<string> tempFiles = new List<string>();
-
-            for (int i = 0; i < num; i++)
-            {
-                tempFiles.Add($"{_basePath}\\temp_{i}.bin");
-            }
-
-            return tempFiles;
         }
 
         public void CreateIndex(string binFilePath, string indexFileName)
@@ -993,99 +931,6 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
             return true;
         }
 
-        public void ReorganizeDataFiles(string mainFilePath, string auxFilePath, string outputFilePath, string indexField)
-        {
-            using var mainFileStream = new FileStream($"{_basePath}\\{mainFilePath}", FileMode.Open);
-            using var mainReader = new BinaryReader(mainFileStream);
-
-            FileStream auxFileStream;
-            BinaryReader auxReader;
-
-            if (File.Exists(auxFilePath))
-            {
-                auxFileStream = new FileStream($"{_basePath}\\{auxFilePath}", FileMode.Open);
-                auxReader = new BinaryReader(auxFileStream);
-            }
-            else
-            {
-                Console.WriteLine("Arquivo auxiliar de inserções está vazio");
-                return;
-            }
-
-            using var outputFileStream = new FileStream(outputFilePath, FileMode.Create);
-            using var outputWriter = new BinaryWriter(outputFileStream);
-
-            string mainId = string.Empty, auxId = string.Empty;
-            string mainAutoIncrement = string.Empty, auxAutoIncrement = string.Empty;
-            string mainExclusionFlag = string.Empty, auxExclusionFlag = string.Empty;
-
-            try
-            {
-                bool mainHasData = TryReadRow(mainReader, indexField, out mainId, out mainAutoIncrement, out mainExclusionFlag);
-                bool auxHasData = TryReadRow(auxReader, indexField, out auxId, out auxAutoIncrement, out auxExclusionFlag);
-
-                while (mainHasData || auxHasData)
-                {
-                    if (!mainHasData)
-                    {
-                        if (auxExclusionFlag != "1") // Se não estiver marcado para exclusão
-                        {
-                            WriteRow(outputWriter, auxId, auxAutoIncrement, auxReader);
-                        }
-                        auxHasData = TryReadRow(auxReader, indexField, out auxId, out auxAutoIncrement, out auxExclusionFlag);
-                    }
-                    else if (!auxHasData)
-                    {
-                        if (mainExclusionFlag != "1") // Se não estiver marcado para exclusão
-                        {
-                            WriteRow(outputWriter, mainId, mainAutoIncrement, mainReader);
-                        }
-                        mainHasData = TryReadRow(mainReader, indexField, out mainId, out mainAutoIncrement, out mainExclusionFlag);
-                    }
-                    else
-                    {
-                        // Comparar IDs para fazer o merge
-                        int comparison = CompareIds(mainId, auxId);
-
-                        if (comparison < 0)
-                        {
-                            if (mainExclusionFlag != "1") // Se não estiver marcado para exclusão
-                            {
-                                WriteRow(outputWriter, mainId, mainAutoIncrement, mainReader);
-                            }
-                            mainHasData = TryReadRow(mainReader, indexField, out mainId, out mainAutoIncrement, out mainExclusionFlag);
-                        }
-                        else if (comparison > 0)
-                        {
-                            if (auxExclusionFlag != "1") // Se não estiver marcado para exclusão
-                            {
-                                WriteRow(outputWriter, auxId, auxAutoIncrement, auxReader);
-                            }
-                            auxHasData = TryReadRow(auxReader, indexField, out auxId, out auxAutoIncrement, out auxExclusionFlag);
-                        }
-                        else
-                        {
-                            // IDs iguais - preferimos o aux e ignoramos o main se ambos existirem
-                            if (auxExclusionFlag != "1") // Se não estiver marcado para exclusão
-                            {
-                                WriteRow(outputWriter, auxId, auxAutoIncrement, auxReader);
-                            }
-
-                            // Pula o main
-                            mainHasData = TryReadRow(mainReader, indexField, out mainId, out mainAutoIncrement, out mainExclusionFlag);
-                            auxHasData = TryReadRow(auxReader, indexField, out auxId, out auxAutoIncrement, out auxExclusionFlag);
-                        }
-                    }
-                }
-
-                Console.WriteLine("Reordenação concluída com sucesso.");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Erro durante a reorganização: {ex.Message}");
-            }
-        }
-
         private bool TryReadRow(BinaryReader reader, string indexField, out string id, out string autoIncrement, out string exclusionFlag)
         {
             try
@@ -1133,14 +978,6 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
             writer.Write("\n".ToString().PadRight(5).AsSpan(0, 5));
         }
 
-        private int CompareIds(string id1, string id2)
-        {
-            long id1Long = long.Parse(id1);
-            long id2Long = long.Parse(id2);
-
-            return id1Long.CompareTo(id2Long);
-        }
-
         public void InsertUserIntoAuxFile(string auxFilePath, UserData newUser)
         {
             using var auxFileStream = new FileStream($"{_basePath}\\{auxFilePath}", FileMode.Append);
@@ -1166,58 +1003,5 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
 
             Console.WriteLine("Registro de usuário inserido no arquivo auxiliar com sucesso.");
         }
-
-        public List<ProductData> LoadProductAuxData(string auxFilePath)
-        {
-            var products = new List<ProductData>();
-
-            using (var fileStream = new FileStream(auxFilePath, FileMode.Open))
-            using (var reader = new BinaryReader(fileStream))
-            {
-                while (fileStream.Position < fileStream.Length)
-                {
-                    string productId = new string(reader.ReadChars(10)).Trim();
-                    string categoryId = new string(reader.ReadChars(20)).Trim();
-                    string brand = new string(reader.ReadChars(25)).Trim();
-
-                    products.Add(new ProductData
-                    {
-                        productId = productId,
-                        categoryId = categoryId,
-                        brand = brand
-                    });
-                }
-            }
-            products.OrderBy(p => long.Parse(p.productId));
-
-            return products;
-        }
-
-        public List<UserData> LoadUserAuxData(string auxFilePath)
-        {
-            var users = new List<UserData>();
-
-            using (var fileStream = new FileStream(auxFilePath, FileMode.Open))
-            using (var reader = new BinaryReader(fileStream))
-            {
-                while (fileStream.Position < fileStream.Length)
-                {
-                    string userId = new string(reader.ReadChars(10)).Trim();
-                    string userSession = new string(reader.ReadChars(35)).Trim();
-                    string eventType = new string(reader.ReadChars(10)).Trim();
-
-                    users.Add(new UserData
-                    {
-                        userId = userId,
-                        userSession = userSession,
-                        eventType = eventType
-                    });
-                }
-            }
-            users.OrderBy(u => long.Parse(u.userId));
-            return users;
-        }
-
-
     }
 }
