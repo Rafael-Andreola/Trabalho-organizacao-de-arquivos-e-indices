@@ -34,6 +34,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 Console.WriteLine("10. Reordenar arquivos bin");
                 Console.WriteLine("11. Deletar indice arquivo de dados Product");
                 Console.WriteLine("12. Deletar indice arquivo de dados User");
+                Console.WriteLine("13. Menu Hash");
                 Console.WriteLine("0. Sair");
                 Console.Write("Escolha uma opção: ");
 
@@ -91,6 +92,10 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
 
                     case "12":
                         fileHandler.DeleteByUserId("User.bin", GetId("Digite o ID que deseja deletar:"), 80);
+                        break;
+
+                    case "13":
+                        ShowHashMenu();
                         break;
 
                     case "0":
@@ -168,5 +173,56 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
 
             return user;
         }
+
+        public void ShowHashMenu()
+        {
+            Dictionary<string, List<long>> hashTable = null;
+
+            while (true)
+            {
+                Console.WriteLine("==== MENU HASH ====");
+                Console.WriteLine("1. Criar Tabela Hash para UserId");
+                Console.WriteLine("2. Consultar na Tabela Hash");
+                Console.WriteLine("0. Voltar ao menu principal");
+                Console.Write("Escolha uma opção: ");
+
+                string option = Console.ReadLine();
+
+                switch (option)
+                {
+                    case "1":
+                        Console.WriteLine("Criando tabela hash em memória...");
+                        hashTable = fileHandler.CreateHashTable("User.bin", 80);
+                        Console.WriteLine($"Tabela hash criada com {hashTable.Count} entradas.");
+                        break;
+
+                    case "2":
+                        if (hashTable == null)
+                        {
+                            Console.WriteLine("A tabela hash ainda não foi criada. Escolha a opção 1 primeiro.");
+                        }
+                        else
+                        {
+                            Console.Write("Digite o UserId para consulta: ");
+                            string userId = Console.ReadLine();
+                            var positions = fileHandler.SearchInHashTable(hashTable, userId);
+
+                            if (positions.Count > 0)
+                            {
+                                Console.WriteLine($"UserId encontrado nas posições: {string.Join(", ", positions)}");
+                            }
+                        }
+                        break;
+
+                    case "0":
+                        return;
+
+                    default:
+                        Console.WriteLine("Opção inválida, tente novamente.");
+                        break;
+                }
+            }
+        }
+
     }
 }

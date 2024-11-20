@@ -982,53 +982,6 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
             return true;
         }
 
-        private bool TryReadRow(BinaryReader reader, string indexField, out string id, out string autoIncrement, out string exclusionFlag)
-        {
-            try
-            {
-                if (reader.BaseStream.Position >= reader.BaseStream.Length)
-                {
-                    id = autoIncrement = exclusionFlag = string.Empty;
-                    return false;
-                }
-
-                autoIncrement = new string(reader.ReadChars(15)).Trim();  // Autoincremento
-                id = new string(reader.ReadChars(10)).Trim();  // ID (userId ou productId)
-
-                if (indexField == "user")
-                {
-                    reader.BaseStream.Seek(45, SeekOrigin.Current); // Pula os campos userSession, eventType e outros
-                }
-                else if (indexField == "product")
-                {
-                    reader.BaseStream.Seek(45, SeekOrigin.Current); // Pula os campos categoryId, brand e outros
-                }
-
-                exclusionFlag = new string(reader.ReadChars(5)).Trim();  // Campo de exclusão
-                reader.BaseStream.Seek(5, SeekOrigin.Current);  // Pula o '\n'
-                return true;
-            }
-            catch
-            {
-                id = autoIncrement = exclusionFlag = string.Empty;
-                return false;
-            }
-        }
-
-        private void WriteRow(BinaryWriter writer, string id, string autoIncrement, BinaryReader reader)
-        {
-            writer.Write(autoIncrement.PadRight(15).AsSpan(0, 15));
-            writer.Write(id.PadRight(10).AsSpan(0, 10));
-
-            char[] buffer = reader.ReadChars(45);
-            writer.Write(buffer);
-
-            string exclusionFlag = new string(reader.ReadChars(5)).Trim();
-
-            reader.BaseStream.Seek(5, SeekOrigin.Current);
-            writer.Write("\n".ToString().PadRight(5).AsSpan(0, 5));
-        }
-
         public void InsertUserIntoAuxFile(string auxFilePath, UserData newUser)
         {
             using var auxFileStream = new FileStream($"{_basePath}\\{auxFilePath}", FileMode.Append);
@@ -1054,5 +1007,55 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
 
             Console.WriteLine("Registro de usuário inserido no arquivo auxiliar com sucesso.");
         }
+
+        public Dictionary<string, List<long>> CreateHashTable(string fileName, long recordSize)
+        {
+            var hashTable = new Dictionary<string, List<long>>();
+
+            string filePath = Path.Combine(_basePath, fileName);
+
+            using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+            using (var reader = new BinaryReader(fileStream))
+            {
+                long position = 0;
+
+                while (reader.BaseStream.Position < reader.BaseStream.Length)
+                {
+                    string id = new string(reader.ReadChars(15)).Trim();
+                    string userId = new string(reader.ReadChars(10)).Trim();
+                    string userSession = new string(reader.ReadChars(35)).Trim();
+                    string eventType = new string(reader.ReadChars(10)).Trim();
+                    string deleteField = new string(reader.ReadChars(5)).Trim();
+                    reader.BaseStream.Seek(5, SeekOrigin.Current); // Pular \n
+
+                    string key = userId;
+
+                    if (!hashTable.ContainsKey(key))
+                    {
+                        hashTable[key] = new List<long>();
+                    }
+
+                    hashTable[key].Add(position);
+                    position += recordSize;
+                }
+            }
+
+            return hashTable;
+        }
+
+        public List<long> SearchInHashTable(Dictionary<string, List<long>> hashTable, string key)
+        {
+            if (hashTable.ContainsKey(key))
+            {
+                return hashTable[key];
+            }
+            else
+            {
+                Console.WriteLine("Chave não encontrada na tabela hash.");
+                return new List<long>();
+            }
+        }
+
+
     }
 }
