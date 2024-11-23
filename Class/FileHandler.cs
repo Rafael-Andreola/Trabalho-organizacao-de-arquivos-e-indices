@@ -784,12 +784,17 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
             // Verifica se o arquivo existe
             if (File.Exists($"{_basePath}\\{fileName}"))
             {
+                var stopwatch = Stopwatch.StartNew();
+
                 // Aplicar a pesquisa binária diretamente no arquivo
                 long indiceEncontrado = PesquisaBinariaArquivo($"{_basePath}\\{fileName}", productId, 27);
+
+                stopwatch.Stop();
 
                 if (indiceEncontrado != -1)
                 {
                     Console.WriteLine($"Product ID '{productId}' encontrado no registro {indiceEncontrado}.");
+                    Console.WriteLine($"Consulta concluída em {stopwatch.ElapsedMilliseconds} ms.");
                 }
                 else
                 {
@@ -807,12 +812,18 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
             // Verifica se o arquivo existe
             if (File.Exists($"{_basePath}\\{fileName}"))
             {
+                var stopwatch = Stopwatch.StartNew();
+
                 // Aplicar a pesquisa binária diretamente no arquivo
                 long indiceEncontrado = PesquisaBinariaArquivo($"{_basePath}\\{fileName}", userId, 27);
+
+                stopwatch.Stop();
+
 
                 if (indiceEncontrado != -1)
                 {
                     Console.WriteLine($"User ID '{userId}' encontrado no registro {indiceEncontrado}.");
+                    Console.WriteLine($"Consulta concluída em {stopwatch.Elapsed.Milliseconds} ms.");
                 }
                 else
                 {
@@ -1008,11 +1019,12 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
             Console.WriteLine("Registro de usuário inserido no arquivo auxiliar com sucesso.");
         }
 
-        public Dictionary<string, List<long>> CreateHashTable(string fileName, long recordSize)
+        public Dictionary<long, List<long>> CreateHashTable(string fileName, long recordSize)
         {
-            var hashTable = new Dictionary<string, List<long>>();
+            var hashTable = new Dictionary<long, List<long>>();
 
             string filePath = Path.Combine(_basePath, fileName);
+            var stopwatch = Stopwatch.StartNew(); 
 
             using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
             using (var reader = new BinaryReader(fileStream))
@@ -1028,7 +1040,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                     string deleteField = new string(reader.ReadChars(5)).Trim();
                     reader.BaseStream.Seek(5, SeekOrigin.Current); // Pular \n
 
-                    string key = userId;
+                    long key = long.Parse(userId);
 
                     if (!hashTable.ContainsKey(key))
                     {
@@ -1040,13 +1052,23 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 }
             }
 
+            stopwatch.Stop();
+
+            Console.WriteLine($"Tabela hash criada em {stopwatch.Elapsed.Seconds} s.");
+
             return hashTable;
         }
 
-        public List<long> SearchInHashTable(Dictionary<string, List<long>> hashTable, string key)
+        public List<long> SearchInHashTable(Dictionary<long, List<long>> hashTable, long key)
         {
+            var stopwatch = Stopwatch.StartNew();
+
             if (hashTable.ContainsKey(key))
             {
+                stopwatch.Stop();
+
+                Console.WriteLine($"Consulta concluída em {stopwatch.Elapsed.Microseconds} ms.");
+
                 return hashTable[key];
             }
             else

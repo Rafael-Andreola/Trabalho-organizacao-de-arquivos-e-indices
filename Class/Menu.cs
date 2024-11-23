@@ -9,6 +9,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
     public class Menu
     {
         public FileHandler fileHandler;
+        Dictionary<long, List<long>> hashTable = null;
 
         private readonly string _fileName; 
         public Menu() 
@@ -176,8 +177,6 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
 
         public void ShowHashMenu()
         {
-            Dictionary<string, List<long>> hashTable = null;
-
             while (true)
             {
                 Console.WriteLine("==== MENU HASH ====");
@@ -204,7 +203,12 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                         else
                         {
                             Console.Write("Digite o UserId para consulta: ");
-                            string userId = Console.ReadLine();
+
+                            if (!long.TryParse(Console.ReadLine(), out long userId))
+                            {
+                                continue;
+                            }
+
                             var positions = fileHandler.SearchInHashTable(hashTable, userId);
 
                             if (positions.Count > 0)
