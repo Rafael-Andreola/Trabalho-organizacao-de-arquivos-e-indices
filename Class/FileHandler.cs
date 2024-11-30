@@ -1,13 +1,7 @@
 ﻿using CsvHelper;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Reflection.PortableExecutable;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
 {
@@ -60,7 +54,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                         tempFiles.Add(tmpFile);
 
                         // Ordena o buffer
-                        if(orderCriterium == "product")
+                        if (orderCriterium == "product")
                         {
                             WriteProductBufferToBinaryFile([.. buffer.OrderBy(p => long.Parse(p.productId))], tmpFile);
                         }
@@ -84,11 +78,11 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                     string tmpFile = $"{_basePath}\\temp_{fileCount}.bin";
                     tempFiles.Add(tmpFile);
 
-                    if(orderCriterium == "product")
+                    if (orderCriterium == "product")
                     {
                         WriteProductBufferToBinaryFile([.. buffer.OrderBy(p => long.Parse(p.productId))], tmpFile);
                     }
-                        else if (orderCriterium == "user")
+                    else if (orderCriterium == "user")
                     {
                         WriteUserBufferToBinaryFile([.. buffer.OrderBy(u => long.Parse(u.userId))], tmpFile);
                     }
@@ -214,7 +208,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
 
             row.deleteField = new string(reader.ReadChars(5)).Trim();
 
-            if((row.userId == "" && row.productId == null) || (row.userId == null && row.productId == ""))
+            if ((row.userId == "" && row.productId == null) || (row.userId == null && row.productId == ""))
             {
                 return null;
             }
@@ -230,11 +224,11 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
 
             if (orderCriterium == "product")
             {
-                WriteProductBufferToBinaryFile([..buffer.OrderBy(p => long.Parse(p.productId))], tmpFile);
+                WriteProductBufferToBinaryFile([.. buffer.OrderBy(p => long.Parse(p.productId))], tmpFile);
             }
             else if (orderCriterium == "user")
             {
-                WriteUserBufferToBinaryFile([..buffer.OrderBy(u => long.Parse(u.userId))], tmpFile);
+                WriteUserBufferToBinaryFile([.. buffer.OrderBy(u => long.Parse(u.userId))], tmpFile);
             }
         }
 
@@ -340,9 +334,9 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 // Inicializa a fila com o primeiro registro de cada arquivo
                 for (int i = 0; i < readers.Count; i++)
                 {
-                    if(TryReadRowForProductData(readers[i], out var row))
+                    if (TryReadRowForProductData(readers[i], out var row))
                     {
-                        priorityQueueProduct.Add( new MergeProduct
+                        priorityQueueProduct.Add(new MergeProduct
                         {
                             row = row,
                             productIdReference = long.Parse(row.productId),
@@ -364,7 +358,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
 
                     foreach (var item in priorityQueueProduct)
                     {
-                        if(firstProduct == null || firstProduct.productIdReference >= item.productIdReference)
+                        if (firstProduct == null || firstProduct.productIdReference >= item.productIdReference)
                         {
                             firstProduct = item;
                         }
@@ -386,7 +380,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                     // Lê o próximo produto do arquivo correspondente
                     if (TryReadRowForProductData(readers[readerIndex], out var row))
                     {
-                        if(row == null || row.productId == "")
+                        if (row == null || row.productId == "")
                         {
                             continue;
                         }
@@ -412,7 +406,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 foreach (var reader in readers)
                 {
                     reader.Close();
-                    
+
                 }
 
                 foreach (var tempFile in tempFiles)
@@ -548,7 +542,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 string productId = new string(reader.ReadChars(10)).Trim();
                 string categoryId = new string(reader.ReadChars(20)).Trim();
                 string brand = new string(reader.ReadChars(25)).Trim();
-                
+
                 // Cria um novo objeto ProductData com os dados lidos
                 row = new Row
                 {
@@ -606,7 +600,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 return false;
             }
         }
-        
+
         public void showDataBinaryFile(string binaryFilePath)
         {
             using FileStream file = new FileStream($"{_basePath}\\{binaryFilePath}.bin", FileMode.Open);
@@ -615,14 +609,14 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
 
             reader.BaseStream.Position = 0;
 
-            while (reader.BaseStream.Position < reader.BaseStream.Length) 
+            while (reader.BaseStream.Position < reader.BaseStream.Length)
             {
                 string text = "";
                 while (true)
                 {
                     char c = reader.ReadChar();
 
-                    if(c != '\n')
+                    if (c != '\n')
                     {
                         text += c.ToString();
                         continue;
@@ -663,7 +657,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                     autoIncremt = new string(reader.ReadChars(15)).Trim();
                     currentId = new string(reader.ReadChars(10)).Trim();
 
-                    if(currentId == "")
+                    if (currentId == "")
                     {
                         continue;
                     }
@@ -672,7 +666,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                     {
                         Debug.Assert(autoIncremt != "");
 
-                        indexWriter.Write(currentId.PadRight(10).AsSpan(0, 10)); 
+                        indexWriter.Write(currentId.PadRight(10).AsSpan(0, 10));
                         indexWriter.Write(autoIncremt.PadRight(15).AsSpan(0, 15));
                         indexWriter.Write("\n");
 
@@ -707,7 +701,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
             {
                 string productId = line.Substring(0, 10).Trim();
 
-                if(productId == "")
+                if (productId == "")
                 {
                     continue;
                 }
@@ -1000,8 +994,8 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
 
             auxWriter.Write(newUser.userId.PadRight(15).AsSpan(0, 15));
             auxWriter.Write(newUser.userSession.PadRight(35).AsSpan(0, 35));
-            auxWriter.Write(newUser.eventType.PadRight(10).AsSpan(0, 10));    
-            auxWriter.Write("\n".ToString().PadLeft(5).AsSpan(0, 5));             
+            auxWriter.Write(newUser.eventType.PadRight(10).AsSpan(0, 10));
+            auxWriter.Write("\n".ToString().PadLeft(5).AsSpan(0, 5));
 
             Console.WriteLine("Registro de usuário inserido no arquivo auxiliar com sucesso.");
         }
@@ -1024,13 +1018,11 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
             var hashTable = new Dictionary<long, List<long>>();
 
             string filePath = Path.Combine(_basePath, fileName);
-            var stopwatch = Stopwatch.StartNew(); 
+            var stopwatch = Stopwatch.StartNew();
 
             using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
             using (var reader = new BinaryReader(fileStream))
             {
-                long position = 0;
-
                 while (reader.BaseStream.Position < reader.BaseStream.Length)
                 {
                     string id = new string(reader.ReadChars(15)).Trim();
@@ -1041,6 +1033,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                     reader.BaseStream.Seek(5, SeekOrigin.Current); // Pular \n
 
                     long key = long.Parse(userId);
+                    long position = long.Parse(id);
 
                     if (!hashTable.ContainsKey(key))
                     {
@@ -1048,7 +1041,6 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                     }
 
                     hashTable[key].Add(position);
-                    position += recordSize;
                 }
             }
 

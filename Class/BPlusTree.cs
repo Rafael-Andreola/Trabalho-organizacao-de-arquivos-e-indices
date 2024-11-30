@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 
 namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
 {
@@ -44,12 +39,12 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
 
             while (reader.BaseStream.Position < reader.BaseStream.Length)
             {
-                    long key = long.Parse(reader.ReadChars(10));
-                    long address = long.Parse(reader.ReadChars(15));
+                long key = long.Parse(reader.ReadChars(10));
+                long address = long.Parse(reader.ReadChars(15));
 
-                    this.Insert(key, address);
+                this.Insert(key, address);
 
-                    reader.BaseStream.Position += 2;
+                reader.BaseStream.Position += 2;
             }
             stopwatch.Stop();
 
