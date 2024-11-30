@@ -38,6 +38,8 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
 
             var stopwatch = new Stopwatch();
 
+            stopwatch.Start();
+
             reader.BaseStream.Position = 0;
 
             while (reader.BaseStream.Position < reader.BaseStream.Length)
@@ -144,7 +146,16 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
         // Método de busca
         public List<long> Search(long key)
         {
-            return SearchInNode(_root, key);
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            var list = SearchInNode(_root, key);
+
+            stopwatch.Stop();
+
+            Console.WriteLine(stopwatch.ElapsedMilliseconds.ToString() + "ms");
+
+            return list;
         }
 
         private List<long> SearchInNode(BPlusTreeNode node, long key)

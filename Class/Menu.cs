@@ -142,10 +142,18 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
 
                         var list = btree.Search(key);
 
-                        foreach (var item in list)
+                        if(list.Count > 0)
                         {
-                            Console.WriteLine("Encontrado no indice: " + item.ToString());
+                            foreach (var item in list)
+                            {
+                                Console.WriteLine("Encontrado no indice: " + item.ToString());
+                            }
+                        }else
+                        {
+                            Console.WriteLine("Nenhum indice encontrado para a chave: " + key.ToString());
                         }
+
+
 
                         break;
 
