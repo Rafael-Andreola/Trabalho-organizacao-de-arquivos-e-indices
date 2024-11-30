@@ -36,6 +36,7 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                 Console.WriteLine("11. Deletar indice arquivo de dados Product");
                 Console.WriteLine("12. Deletar indice arquivo de dados User");
                 Console.WriteLine("13. Menu Hash");
+                Console.WriteLine("14. Menu Arvore B+");
                 Console.WriteLine("0. Sair");
                 Console.Write("Escolha uma opção: ");
 
@@ -99,9 +100,61 @@ namespace Trabalho1_OrganizaçõesDeArquivosE_Indices.Class
                         ShowHashMenu();
                         break;
 
+                    case "14":
+                        ShowBplusMenu();
+                        break;
+
                     case "0":
                         Console.WriteLine("Saindo...");
                         return;
+                }
+            }
+        }
+
+        private void ShowBplusMenu()
+        {
+            BPlusTree btree = new BPlusTree(4);
+
+            while (true)
+            {
+                Console.WriteLine("==== MENU ARVORE B+ ====");
+                Console.WriteLine("1. Criar indice");
+                Console.WriteLine("2. Consultar");
+                Console.WriteLine("0. Voltar ao menu principal");
+                Console.Write("Escolha uma opção: ");
+
+                string option = Console.ReadLine();
+
+                switch (option)
+                {
+                    case "1":
+                        Console.WriteLine("Criando B+ tree em memória...");
+                        btree.InsertByArchive( new FileStream($"{GetBasePath()}\\IndexProductId.bin", FileMode.Open));
+                        break;
+
+                    case "2":
+                        Console.WriteLine("Digite a chave que deseja pesquisar:");
+                        if (!long.TryParse(Console.ReadLine(), out long key))
+                        {
+                            Console.WriteLine("Chave inválida, tente novamente.");
+                            continue;
+                        }
+
+                        var list = btree.Search(key);
+
+                        foreach (var item in list)
+                        {
+                            Console.WriteLine("Encontrado no indice: " + item.ToString());
+                        }
+
+                        break;
+
+                    case "0":
+                        return;
+
+                    default:
+                        Console.WriteLine("Opção inválida, tente novamente.");
+                        break;
                 }
             }
         }
